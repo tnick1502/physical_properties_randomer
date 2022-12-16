@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from enum import Enum
 from decimal import Decimal
+from typing import Dict, Union
 
 from properties_params import PhysicalPropertyParams
 
@@ -162,7 +163,7 @@ class PhysicalProperties:
             data_gran[key] = getattr(self, f"granulometric_{key}_modified")
         return data_gran
 
-    def setRandom(self, random_params: {}):
+    def setRandom(self, random_params: Dict[str, Dict[str, Union[str, float]]]):
         for param in random_params:
             if param != "granulometric":
                 original_value = getattr(self, param)
