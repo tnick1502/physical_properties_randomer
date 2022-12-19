@@ -112,14 +112,14 @@ class PhysicalProperties:
     granulometric_0002_modified = DataTypeValidation(float)
     granulometric_0000_modified = DataTypeValidation(float)
 
-    def __init__(self):
+    def __init__(self, headler=None):
+        if not headler:
+            self.headler = lambda: None
+        else:
+            self.headler = headler
+
         for key in PhysicalProperties.__dict__:
             if isinstance(getattr(PhysicalProperties, key), DataTypeValidation):
-                object.__setattr__(self, key, None)
-
-    def setNoneModified(self):
-        for key in PhysicalProperties.__dict__:
-            if "modified" in key:
                 object.__setattr__(self, key, None)
 
     def defineProperties(self, data_frame: pd.DataFrame, number: int) -> None:
@@ -219,7 +219,7 @@ class PhysicalProperties:
                                                             self.Wp_modified)
 
     def __repr__(self):
-        origin_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" not in attr_name])
+        origin_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" not in attr_name and "headler" not in attr_name])
         modified_data = ', '.join([f'{attr_name[:-9]}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" in attr_name])
         return f"""
     Исходные данные:
@@ -227,6 +227,12 @@ class PhysicalProperties:
     Модифицированные данные:
         {modified_data}
         """
+
+    def __setattr__(self, key, value):
+        if "modified" in key:
+            self.headler()
+        object.__setattr__(self, key, value)
+
 
     @staticmethod
     def define_type_ground(data_gran: dict, Ir: float, Ip: float) -> int:
