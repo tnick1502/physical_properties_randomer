@@ -8,51 +8,68 @@ random_params = {
         "type": RandomType.PERCENT,
         "value": 20
     },
+
     "r": {
         "type": RandomType.PERCENT,
         "value": 20
     },
-    "rd": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-    "n": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-    "e": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
+
     "W": {
         "type": RandomType.PERCENT,
         "value": 20
     },
-    "Sr": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
+
     "Wl": {
         "type": RandomType.PERCENT,
         "value": 20
     },
+
     "Wp": {
         "type": RandomType.PERCENT,
         "value": 20
     },
-    "Ip": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-    "Il": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
+
     "Ir": {
         "type": RandomType.PERCENT,
         "value": 20
     },
+
+    "rd_min": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "rd_max": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "Kf_min": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "Kf_max": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "slope_angle_dry": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "slope_angle_wet": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
     "granulometric": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "granulometric_areometer": {
         "type": RandomType.PERCENT,
         "value": 20
     },
@@ -106,4 +123,5 @@ class Statment:
 if __name__ == "__main__":
     s = Statment()
     s.setExcelFile('/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls')
+    s.setRandom()
     print(s)

@@ -1,3 +1,21 @@
+"""Модуль построения модели свойств
+
+Каждое свойство проходит валидацию DataTypeValidation
+
+Для использования создается экземпляр класса. Далее для него вызывается метод defineProperties, 
+который определит все параметры из датафрейма, а модифицированным параметрам присвоит значение текущих.
+
+Метод setRandom изменяет значение всех модифицированных параметров по передаваемым заканам изменения. 
+Внури метода происходит проверка на несоответствие текущему типу грунта и на отклонение значения e более чем на 0.05
+
+
+Изменяемые параметры:
+    rs, r, W, WL, WP, Угол откоса, rd_min, rd_max, Kf_min, Kf_max, Ir
+
+Пересчитываемые параметры:
+    rd, e, n, Ip, Il, Sr
+"""
+
 import pandas as pd
 import numpy as np
 from enum import Enum
@@ -9,100 +27,6 @@ from properties_params import PhysicalPropertyParams
 class RandomType(Enum):
     PERCENT = "PERCENT"
     ABSOLUTE = "ABSOLUTE"
-
-
-{
-    "rs": "РАНДОМ",
-    "r": "РАНДОМ",
-    "W": "РАНДОМ",
-    "WL": "РАНДОМ",
-    "WP": "РАНДОМ",
-    "Угол откоса": "РАНДОМ",
-    "rd_min": "РАНДОМ",
-    "rd_max": "РАНДОМ",
-    "Kf_min": "РАНДОМ",
-    "Kf_max": "РАНДОМ",
-    "Содержание органического вещества": "РАНДОМ",
-
-    "rd": "ПЕРЕСЧЕТ",
-    "e": "ПЕРЕСЧЕТ",
-    "n": "ПЕРЕСЧЕТ",
-    "Ip": "ПЕРЕСЧЕТ",
-    "Il": "ПЕРЕСЧЕТ",
-    "Sr": "ПЕРЕСЧЕТ",
-}
-
-random_params = {
-    "rs": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "r": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "W": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "Wl": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "Wp": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "Ir": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "rd_min": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "rd_max": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "Kf_min": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "Kf_max": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "slope_angle_dry": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "slope_angle_wet": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "granulometric": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-
-    "granulometric_oriometer": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-}
 
 class DataTypeValidation:
     """Data type validation"""
@@ -224,28 +148,79 @@ class PhysicalProperties:
         return data_gran
 
     def setRandom(self, random_params: Dict[str, Dict[str, Union[str, float]]]):
+        """Функция наложения рандома
+
+        Для каждого параметра начинается проход по 10 циклов.
+        Если за 10 циклов не получилось получить рандом,
+        удовлетворяющий условиям (не меняется тип грунта, e меняется в пределах 0.05), то
+        decrease_parameter увеличивается на 1 (данный параметр уменьшает величину приращения)
+
+        """
+
         for param in random_params:
-            if param != "granulometric":
-                original_value = getattr(self, param)
-                if original_value:
-                    if random_params[param]["type"] == RandomType.PERCENT:
-                        random_value = original_value * np.random.uniform(
-                            1 - random_params[param]["value"]/100, 1 + random_params[param]["value"]/100)
-                    elif random_params[param]["type"] == RandomType.ABSOLUTE:
-                        random_value = original_value + np.random.uniform(
-                            random_params[param]["value"], -random_params[param]["value"])
 
-                    accuracy = Decimal(str(original_value)).as_tuple().exponent*(-1)
+            cycles_count = 10
+            decrease_parameter = 1
 
-                    setattr(self, f'{param}_modified', np.round(random_value, accuracy))
+            while True:
+                if param in ["granulometric", "granulometric_areometer"]:
+                    pass
+                else:
+                    self.randomParam(
+                        param_name=param,
+                        param_type=random_params[param]["type"],
+                        param_value=random_params[param]["value"] / decrease_parameter
+                    )
 
-                    #self.granDictModified()
+                    if param not in ["rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet"]:
+                        self.reCalculateProperties()
 
-                    print(self.type_ground == PhysicalProperties.define_type_ground(self.granDictModified(), self.Ir_modified, self.Ip_modified))
+                type_ground = PhysicalProperties.define_type_ground(
+                    self.granDictModified(), self.Ir_modified, self.Ip_modified)
+
+                if self.type_ground == type_ground and (
+                        (self.e - 0.05 < self.e_modified < self.e + 0.05) if self.e else True
+                ):
+                    break
+                else:
+                    cycles_count -= 1
+
+                if cycles_count == 0:
+                    decrease_parameter += 1
+                    cycles_count = 10
+
+    def randomParam(self, param_name: str, param_type: str, param_value: float):
+        """Получение значений рандомного параметра для заданных значений"""
+        original_value = getattr(self, param_name)
+        if original_value:
+            if param_type == RandomType.PERCENT:
+                random_value = original_value * np.random.uniform(
+                    1 - param_value / 100, 1 + param_value / 100)
+
+            elif param_type == RandomType.ABSOLUTE:
+                random_value = original_value + np.random.uniform(
+                    param_value, -param_value)
+
+            accuracy = Decimal(str(original_value)).as_tuple().exponent * (-1)
+
+            setattr(self, f'{param_name}_modified', np.round(random_value, accuracy))
+
+    def reCalculateProperties(self):
+        if self.r:
+            self.rd_modified = PhysicalProperties.define_rd(self.r_modified, self.W_modified)
+            self.Sr_modified = PhysicalProperties.define_Sr(self.W_modified, self.r_modified,
+                                                            self.n_modified)
+            self.e_modified = PhysicalProperties.define_e(self.rs_modified, self.rd_modified)
+            self.n_modified = PhysicalProperties.define_n(self.e_modified)
+
+        if self.Ip and self.Ip:
+            self.Ip_modified = PhysicalProperties.define_Ip(self.Wl_modified, self.Wp_modified)
+            self.Il_modified = PhysicalProperties.define_Il(self.W_modified, self.Wl_modified,
+                                                            self.Wp_modified)
 
     def __repr__(self):
         origin_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" not in attr_name])
-        modified_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" in attr_name])
+        modified_data = ', '.join([f'{attr_name[:-9]}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" in attr_name])
         return f"""
     Исходные данные:
         {origin_data}
@@ -287,7 +262,7 @@ class PhysicalProperties:
 
     @staticmethod
     def define_rd(r: float, W: float) -> float:
-        return np.round(r / (2 + W), 2)
+        return np.round(r / (1 + (W / 100)), 2)
 
     @staticmethod
     def define_e(rs: float, rd: float) -> float:
@@ -295,7 +270,7 @@ class PhysicalProperties:
 
     @staticmethod
     def define_n(e: float) -> float:
-        return np.round(e / (1 + e), 2)
+        return np.round((e / (1 + e)) * 100, 1)
 
     @staticmethod
     def define_Ip(Wl: float, Wp: float) -> float:
