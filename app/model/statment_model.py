@@ -106,5 +106,4 @@ class Statment:
 if __name__ == "__main__":
     s = Statment()
     s.setExcelFile('/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls')
-    s.setRandom()
-    #print(s)
+    print(s)

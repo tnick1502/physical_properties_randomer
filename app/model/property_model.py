@@ -10,56 +10,95 @@ class RandomType(Enum):
     PERCENT = "PERCENT"
     ABSOLUTE = "ABSOLUTE"
 
+
+{
+    "rs": "РАНДОМ",
+    "r": "РАНДОМ",
+    "W": "РАНДОМ",
+    "WL": "РАНДОМ",
+    "WP": "РАНДОМ",
+    "Угол откоса": "РАНДОМ",
+    "rd_min": "РАНДОМ",
+    "rd_max": "РАНДОМ",
+    "Kf_min": "РАНДОМ",
+    "Kf_max": "РАНДОМ",
+    "Содержание органического вещества": "РАНДОМ",
+
+    "rd": "ПЕРЕСЧЕТ",
+    "e": "ПЕРЕСЧЕТ",
+    "n": "ПЕРЕСЧЕТ",
+    "Ip": "ПЕРЕСЧЕТ",
+    "Il": "ПЕРЕСЧЕТ",
+    "Sr": "ПЕРЕСЧЕТ",
+}
+
 random_params = {
     "rs": {
         "type": RandomType.PERCENT,
         "value": 20
     },
+
     "r": {
         "type": RandomType.PERCENT,
         "value": 20
     },
-    "rd": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-    "n": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-    "e": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
+
     "W": {
         "type": RandomType.PERCENT,
         "value": 20
     },
-    "Sr": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
+
     "Wl": {
         "type": RandomType.PERCENT,
         "value": 20
     },
+
     "Wp": {
         "type": RandomType.PERCENT,
         "value": 20
     },
-    "Ip": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
-    "Il": {
-        "type": RandomType.PERCENT,
-        "value": 20
-    },
+
     "Ir": {
         "type": RandomType.PERCENT,
         "value": 20
     },
+
+    "rd_min": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "rd_max": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "Kf_min": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "Kf_max": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "slope_angle_dry": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "slope_angle_wet": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
     "granulometric": {
+        "type": RandomType.PERCENT,
+        "value": 20
+    },
+
+    "granulometric_oriometer": {
         "type": RandomType.PERCENT,
         "value": 20
     },
@@ -99,6 +138,12 @@ class PhysicalProperties:
     Ip = DataTypeValidation(float)
     Il = DataTypeValidation(float)
     Ir = DataTypeValidation(float)
+    rd_min = DataTypeValidation(float)
+    rd_max = DataTypeValidation(float)
+    Kf_min = DataTypeValidation(float)
+    Kf_max = DataTypeValidation(float)
+    slope_angle_dry = DataTypeValidation(float)
+    slope_angle_wet = DataTypeValidation(float)
     granulometric_10 = DataTypeValidation(float)
     granulometric_5 = DataTypeValidation(float)
     granulometric_2 = DataTypeValidation(float)
@@ -125,6 +170,12 @@ class PhysicalProperties:
     Ip_modified = DataTypeValidation(float)
     Il_modified = DataTypeValidation(float)
     Ir_modified = DataTypeValidation(float)
+    rd_min_modified = DataTypeValidation(float)
+    rd_max_modified = DataTypeValidation(float)
+    Kf_min_modified = DataTypeValidation(float)
+    Kf_max_modified = DataTypeValidation(float)
+    slope_angle_dry_modified = DataTypeValidation(float)
+    slope_angle_wet_modified = DataTypeValidation(float)
     granulometric_10_modified = DataTypeValidation(float)
     granulometric_5_modified = DataTypeValidation(float)
     granulometric_2_modified = DataTypeValidation(float)
@@ -142,6 +193,11 @@ class PhysicalProperties:
             if isinstance(getattr(PhysicalProperties, key), DataTypeValidation):
                 object.__setattr__(self, key, None)
 
+    def setNoneModified(self):
+        for key in PhysicalProperties.__dict__:
+            if "modified" in key:
+                object.__setattr__(self, key, None)
+
     def defineProperties(self, data_frame: pd.DataFrame, number: int) -> None:
         """Считывание строки свойств"""
         for attr_name in PhysicalPropertyParams:
@@ -150,6 +206,10 @@ class PhysicalProperties:
                     )
         self.sample_number = number
         self.type_ground = PhysicalProperties.define_type_ground(self.granDict(), self.Ir, self.Ip)
+
+        for key in PhysicalProperties.__dict__:
+            if "modified" in key:
+                object.__setattr__(self, key, getattr(self, key[:-9]))
 
     def granDict(self):
         data_gran = {}
@@ -183,8 +243,6 @@ class PhysicalProperties:
 
                     print(self.type_ground == PhysicalProperties.define_type_ground(self.granDictModified(), self.Ir_modified, self.Ip_modified))
 
-
-
     def __repr__(self):
         origin_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" not in attr_name])
         modified_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" in attr_name])
@@ -196,7 +254,7 @@ class PhysicalProperties:
         """
 
     @staticmethod
-    def define_type_ground(data_gran, Ir, Ip) -> int:
+    def define_type_ground(data_gran: dict, Ir: float, Ip: float) -> int:
         """Функция определения типа грунта через грансостав"""
         none_to_zero = lambda x: 0 if not x else x
 
@@ -228,8 +286,30 @@ class PhysicalProperties:
         return type_ground
 
     @staticmethod
+    def define_rd(r: float, W: float) -> float:
+        return np.round(r / (2 + W), 2)
+
+    @staticmethod
+    def define_e(rs: float, rd: float) -> float:
+        return np.round((rs - rd) / rd, 2)
+
+    @staticmethod
+    def define_n(e: float) -> float:
+        return np.round(e / (1 + e), 2)
+
+    @staticmethod
+    def define_Ip(Wl: float, Wp: float) -> float:
+        return np.round(Wl - Wp, 2)
+
+    @staticmethod
+    def define_Il(W: float, Wl: float, Wp: float) -> float:
+        return np.round((W - Wp) / (Wl - Wp), 2)
+
+    @staticmethod
+    def define_Sr(W: float, r: float, n: float) -> float:
+        return np.round((W * r) / (n * (1 + W)), 2)
+
+    @staticmethod
     def float_df(x):
         return None if str(x) in ["nan", "NaT"] else x
-
-
 
