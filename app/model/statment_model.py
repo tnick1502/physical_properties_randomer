@@ -96,6 +96,11 @@ class Statment:
         for key in self.data:
             self.data[key].setRandom(random_params)
 
+    def getData(self):
+        return {
+            key: self.data[key].getData() for key in self.data
+        }
+
     def __iter__(self):
         for key in self.data:
             yield key
@@ -122,4 +127,4 @@ if __name__ == "__main__":
     s = Statment()
     s.setExcelFile('/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls')
     s.setRandom()
-    print(s)
+    print(s.getData())
