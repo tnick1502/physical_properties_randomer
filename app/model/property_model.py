@@ -363,5 +363,3 @@ class PhysicalProperties:
     @staticmethod
     def random(percent):
         return np.random.uniform(1 - percent, 1 + percent)
-
-print(str(int))
