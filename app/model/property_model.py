@@ -294,6 +294,16 @@ class PhysicalProperties:
         {modified_data}
         """
 
+    def getData(self):
+        return {
+            "origin_data": {
+                attr_name: self.__dict__[attr_name] for attr_name in self.__dict__
+                if "modified" not in attr_name and "headler" not in attr_name
+            },
+            "modified_data": {
+                attr_name[:-9]: self.__dict__[attr_name] for attr_name in self.__dict__ if "modified" in attr_name}
+        }
+
     def __setattr__(self, key, value):
         if "modified" in key:
             self.headler()
