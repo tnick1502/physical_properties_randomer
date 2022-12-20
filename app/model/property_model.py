@@ -135,18 +135,6 @@ class PhysicalProperties:
             if "modified" in key:
                 object.__setattr__(self, key, getattr(self, key[:-9]))
 
-    def granDict(self):
-        data_gran = {}
-        for key in ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']:
-            data_gran[key] = getattr(self, f"granulometric_{key}")
-        return data_gran
-
-    def granDictModified(self):
-        data_gran = {}
-        for key in ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']:
-            data_gran[key] = getattr(self, f"granulometric_{key}_modified")
-        return data_gran
-
     def setRandom(self, random_params: Dict[str, Dict[str, Union[str, float]]]):
         """Функция наложения рандома
 
@@ -157,14 +145,26 @@ class PhysicalProperties:
 
         """
 
+        granKeys = [
+            "granulometric_10_modified", "granulometric_5_modified", "granulometric_2_modified",
+            "granulometric_1_modified", "granulometric_05_modified", "granulometric_025_modified",
+            "granulometric_01_modified", "granulometric_005_modified"
+        ]
+
+        granKeysAreometer = [
+            "granulometric_001_modified", "granulometric_0002_modified", "granulometric_0000_modified"
+        ]
+
         for param in random_params:
 
             cycles_count = 10
             decrease_parameter = 1
 
             while True:
-                if param in ["granulometric", "granulometric_areometer"]:
-                    pass
+                if param == "granulometric":
+                    self.randomGran(granKeys, (random_params[param]["value"]) / decrease_parameter)
+                elif param == "granulometric_areometer":
+                    self.randomGran(granKeysAreometer, random_params[param]["value"] / decrease_parameter)
                 else:
                     self.randomParam(
                         param_name=param,
@@ -205,7 +205,20 @@ class PhysicalProperties:
 
             setattr(self, f'{param_name}_modified', np.round(random_value, accuracy))
 
+    def granDict(self):
+        data_gran = {}
+        for key in ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']:
+            data_gran[key] = getattr(self, f"granulometric_{key}")
+        return data_gran
+
+    def granDictModified(self):
+        data_gran = {}
+        for key in ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']:
+            data_gran[key] = getattr(self, f"granulometric_{key}_modified")
+        return data_gran
+
     def reCalculateProperties(self):
+        """Пересчет свойств грунтов при изменении ключевых параметров"""
         if self.r:
             self.rd_modified = PhysicalProperties.define_rd(self.r_modified, self.W_modified)
             self.Sr_modified = PhysicalProperties.define_Sr(self.W_modified, self.r_modified,
@@ -217,6 +230,53 @@ class PhysicalProperties:
             self.Ip_modified = PhysicalProperties.define_Ip(self.Wl_modified, self.Wp_modified)
             self.Il_modified = PhysicalProperties.define_Il(self.W_modified, self.Wl_modified,
                                                             self.Wp_modified)
+
+    def randomGran(self, keys, percent):
+        left_zero_key = None
+        right_zero_key = None
+        change = False
+
+        balance = self.calculateGranBalance()
+        if balance == 100.:
+            return
+        else:
+            balance = -1
+
+        while balance < 0:
+            for key in keys:
+                value = getattr(self, key)
+                if value:
+                    if percent >= value:
+                        setattr(self, key, np.round(np.random.uniform(0, value + percent), 1))
+                    else:
+                        setattr(self, key, np.round(np.random.uniform(value - percent, value + percent), 1))
+                else:
+                    if change:
+                        right_zero_key = key
+                    else:
+                        left_zero_key = key
+
+            balance = self.calculateGranBalance()
+
+        zero_keys = [key for key in [left_zero_key, right_zero_key] if key]
+
+        if len(zero_keys):
+            setattr(self, np.random.choice(zero_keys), balance)
+        else:
+            key = np.random.choice(keys)
+            print(key)
+            setattr(self, key, getattr(self, key) + balance)
+
+    def calculateGranBalance(self):
+        """Расчет остатка процентов по грансоставу, чтобы суммарно было 100"""
+        return 100. - sum(
+            [value for value in [
+                self.granulometric_10_modified, self.granulometric_5_modified, self.granulometric_2_modified,
+                self.granulometric_1_modified, self.granulometric_05_modified, self.granulometric_025_modified,
+                self.granulometric_01_modified, self.granulometric_005_modified, self.granulometric_001_modified,
+                self.granulometric_0002_modified, self.granulometric_0000_modified
+            ] if value]
+        )
 
     def __repr__(self):
         origin_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" not in attr_name and "headler" not in attr_name])
@@ -293,4 +353,8 @@ class PhysicalProperties:
     @staticmethod
     def float_df(x):
         return None if str(x) in ["nan", "NaT"] else x
+
+    @staticmethod
+    def random(percent):
+        return np.random.uniform(1 - percent, 1 + percent)
 

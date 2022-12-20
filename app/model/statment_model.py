@@ -65,13 +65,11 @@ random_params = {
     },
 
     "granulometric": {
-        "type": RandomType.PERCENT,
-        "value": 20
+        "value": 3
     },
 
     "granulometric_areometer": {
-        "type": RandomType.PERCENT,
-        "value": 20
+        "value": 3
     },
 }
 
