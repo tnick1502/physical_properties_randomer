@@ -30,8 +30,10 @@ class RandomType(Enum):
 
 class DataTypeValidation:
     """Data type validation"""
+    data_type: object = None
+
     def __init__(self, *args):
-        self.data_types = args
+        self.data_type = args[0]
 
     def __set_name__(self, owner, name):
         self.attr = name
@@ -39,10 +41,14 @@ class DataTypeValidation:
     def __set__(self, instance, value):
         if value is None:
             instance.__dict__[self.attr] = value
-        elif any(isinstance(value, i) for i in self.data_types):
-            instance.__dict__[self.attr] = value
         else:
-            raise ValueError(f"{value} typy must be in {str(self.data_types)}, but it is {str(type(value))}")
+            if isinstance(value, self.data_type):
+                instance.__dict__[self.attr] = value
+            else:
+                try:
+                    instance.__dict__[self.attr] = self.data_type(value)
+                except:
+                    raise ValueError(f"{value} typy must be in {str(self.data_types)}, but it is {str(type(value))}")
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -358,3 +364,4 @@ class PhysicalProperties:
     def random(percent):
         return np.random.uniform(1 - percent, 1 + percent)
 
+print(str(int))
