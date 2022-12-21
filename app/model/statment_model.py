@@ -78,6 +78,11 @@ class Statment:
     excel_path: str = ''
     dataframe: pd.DataFrame
 
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(Statment, cls).__new__(cls)
+        return cls.instance
+
     def setExcelFile(self, path: str):
         """Открытие файла excel"""
         if not all([os.path.exists(path), (path.endswith('.xls') or path.endswith('.xlss'))]):
