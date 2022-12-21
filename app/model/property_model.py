@@ -253,9 +253,11 @@ class PhysicalProperties:
                 value = getattr(self, key)
                 if value:
                     if percent >= value:
-                        setattr(self, key, np.round(np.random.uniform(0, value + percent), 1))
+                        val = np.round(np.random.uniform(0, value + percent), 1)
+                        setattr(self, key, val if val else None)
                     else:
-                        setattr(self, key, np.round(np.random.uniform(value - percent, value + percent), 1))
+                        val = np.round(np.random.uniform(value - percent, value + percent), 1)
+                        setattr(self, key, val if val else None)
                 else:
                     if change:
                         right_zero_key = key
@@ -270,7 +272,6 @@ class PhysicalProperties:
             setattr(self, np.random.choice(zero_keys), balance)
         else:
             key = np.random.choice(keys)
-            print(key)
             setattr(self, key, getattr(self, key) + balance)
 
     def calculateGranBalance(self):
