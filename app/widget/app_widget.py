@@ -45,7 +45,7 @@ class App(QMainWindow):
 
     def set_random(self, params):
         statment.setRandom(params, self.table.active_laboratory_numbers)
-        self.table.set_data()
+        self.table.set_data(self.table.active_laboratory_numbers)
 
 
     def keyPressEvent(self, event):

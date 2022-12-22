@@ -57,7 +57,7 @@ class TablePhysicalProperties(QTableWidget):
                 return row
         return None
 
-    def set_data(self):
+    def set_data(self, active_keys=None):
         """Функция для получения данных"""
         replaceNone = lambda x: x if x != "None" else "-"
 
@@ -65,14 +65,17 @@ class TablePhysicalProperties(QTableWidget):
 
         self._clear_table()
 
-        self.active_laboratory_numbers = list(data.keys())
+        self.active_laboratory_numbers = active_keys if active_keys is not None else list(data.keys())
 
         self.setRowCount(len(data) * 2)
 
         for i, lab in enumerate(data):
             item = QTableWidgetItem(lab)
             item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            item.setCheckState(Qt.Checked)
+            if lab in self.active_laboratory_numbers:
+                item.setCheckState(Qt.Checked)
+            else:
+                item.setCheckState(Qt.Unchecked)
             item.setTextAlignment(Qt.AlignCenter)
             self.setItem(2 * i, 0, item)
 
@@ -190,7 +193,7 @@ class ChooseWidget(QWidget):
 
         self.layout.addWidget(self.box)
         self.setLayout(self.layout)
-        self.box_layout.setContentsMargins(5, 5, 5, 5)
+        self.layout.setContentsMargins(5, 5, 5, 5)
 
 class Params(QWidget):
     signal = pyqtSignal(dict)
@@ -277,12 +280,37 @@ class Params(QWidget):
         super().__init__()
         self.create_UI()
         self.set_params(self.initial_params)
-        self.setFixedHeight(500)
+        self.setFixedHeight(550)
         self.setFixedWidth(450)
 
     def create_UI(self):
 
         self.savebox_layout = QVBoxLayout()
+
+        self.box = QGroupBox("Типы параметров")
+        self.box_layout = QVBoxLayout()
+        self.box.setLayout(self.box_layout)
+        self.h1_layout = QHBoxLayout()
+        self.h2_layout = QHBoxLayout()
+
+        self.combobox = QComboBox()
+        self.combobox.addItems(["По умолчанию"] + list(GroundTypes.values()))
+        self.combobox.setFixedHeight(30)
+        self.h1_layout.addWidget(self.combobox)
+
+        self.param_save_line = QLineEdit()
+        self.param_save_line.setFixedHeight(30)
+        self.param_save_button = QPushButton("Сохранить текущую конфигурацию")
+        self.param_save_button.setFixedHeight(30)
+
+        self.h2_layout.addWidget(self.param_save_line)
+        self.h2_layout.addWidget(self.param_save_button)
+
+        self.box_layout.addLayout(self.h1_layout)
+        self.box_layout.addLayout(self.h2_layout)
+
+
+
 
         self.path_box = QGroupBox("Параметры")
         self.path_box_layout = QVBoxLayout()
@@ -321,8 +349,10 @@ class Params(QWidget):
 
             self.path_box_layout.addLayout(layout)
 
+        self.savebox_layout.addWidget(self.box)
         self.savebox_layout.addWidget(self.path_box)
         self.button = QPushButton("Крутить")
+        self.button.setFixedHeight(30)
         self.button.clicked.connect(self.get_data)
         self.savebox_layout.addWidget(self.button)
         self.setLayout(self.savebox_layout)
