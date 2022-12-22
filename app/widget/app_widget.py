@@ -41,6 +41,7 @@ class App(QMainWindow):
         self.layout.setContentsMargins(5, 5, 5, 5)
         self.open_widget.signal.connect(self.table.set_data)
         self.params.signal[dict].connect(self.set_random)
+        self.choose.signal[list].connect(self.table.filter)
         self.show()
 
     def set_random(self, params):

@@ -57,6 +57,18 @@ class TablePhysicalProperties(QTableWidget):
                 return row
         return None
 
+    def filter(self, lab_numbers):
+        for i in range(self.rowCount()):
+            try:
+                text = self.item(i, 0).text()
+                item = self.item(i, 0)
+                if text in lab_numbers:
+                    item.setCheckState(Qt.Checked)
+                else:
+                    item.setCheckState(Qt.Unchecked)
+            except:
+                pass
+
     def set_data(self, active_keys=None):
         """Функция для получения данных"""
         replaceNone = lambda x: x if x != "None" else "-"
@@ -95,7 +107,6 @@ class TablePhysicalProperties(QTableWidget):
         for i, lab in enumerate(data):
             self.set_row_color(2 * i, (192, 192, 192))
             self.setSpan(2 * i, 0, 2, 1)
-            #self.setSpan(2 * i, 1, 2, 1)
 
     def handleItemClicked(self, item):
        if item.column() == 0:
@@ -156,7 +167,7 @@ class OpenWidget(QWidget):
             QMessageBox.critical(self, "Ошибка", f"{str(err)}", QMessageBox.Ok)
 
 class ChooseWidget(QWidget):
-    signal = pyqtSignal()
+    signal = pyqtSignal(list)
 
     def __init__(self):
         super().__init__()
@@ -194,6 +205,12 @@ class ChooseWidget(QWidget):
         self.layout.addWidget(self.box)
         self.setLayout(self.layout)
         self.layout.setContentsMargins(5, 5, 5, 5)
+
+        self.zero_button.clicked.connect(lambda: self.signal.emit([]))
+        self.all_button.clicked.connect(lambda: self.signal.emit(list(statment.data.keys())))
+        self.combo_box.activated.connect(self._combo_changed)
+
+    def _combo_changed(self):
 
 class Params(QWidget):
     signal = pyqtSignal(dict)
