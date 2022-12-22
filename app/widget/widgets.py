@@ -1,37 +1,11 @@
 from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem, QTableWidget, QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,\
-    QLineEdit, QPushButton, QLabel, QFileDialog
-from PyQt5.QtCore import Qt
+    QLineEdit, QPushButton, QLabel, QFileDialog, QMessageBox, QCheckBox, QComboBox
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import QtGui
 
-test_data = {'89-4': {
-    'origin_data': {'rs': 2.71, 'r': 2.18, 'rd': 1.91, 'n': 29.7, 'e': 0.42, 'W': 14.4, 'Sr': 0.93, 'Wl': 22.9, 'Wp': 13.4, 'Ip': 9.5, 'Il': 0.11, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None,
-                    'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None,
-                    'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None,
-                    'granulometric_0000': None, 'sample_number': 0, 'type_ground': 7},
-    'modified_data': {'rs': 2.77, 'r': 2.17, 'rd': 1.93, 'n': 30.6, 'e': 0.44, 'W': 12.5, 'Sr': 0.07, 'Wl': 24.9, 'Wp': 15.3, 'Ip': 9.6, 'Il': -0.29, 'Ir': None, 'rd_min': None, 'rd_max': None,
-                      'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None,
-                      'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None,
-                      'granulometric_0002': None, 'granulometric_0000': None}},
-    '89-7': {
-        'origin_data': {'rs': 2.66, 'r': None, 'rd': None, 'n': None, 'e': None, 'W': 10.0, 'Sr': None, 'Wl': None, 'Wp': None, 'Ip': None, 'Il': None, 'Ir': None, 'rd_min': 1.44,
-                        'rd_max': 1.63, 'Kf_min': 7.31, 'Kf_max': 3.64, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None,
-                        'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': 2.2, 'granulometric_01': 90.5, 'granulometric_005': 7.3,
-                        'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None, 'sample_number': 1, 'type_ground': 4},
-        'modified_data': {'rs': 2.61, 'r': None, 'rd': None, 'n': None, 'e': None, 'W': 11.8, 'Sr': None, 'Wl': None, 'Wp': None, 'Ip': None, 'Il': None, 'Ir': None, 'rd_min': 1.34,
-                          'rd_max': 1.46, 'Kf_min': 8.57, 'Kf_max': 3.04, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None,
-                          'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': 0.1, 'granulometric_025': 1.0, 'granulometric_01': 93.3, 'granulometric_005': 5.6,
-                          'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': 0.0}},
-    '91-3': {'origin_data': {'rs': 2.7, 'r': 2.12, 'rd': 1.87, 'n': 30.9, 'e': 0.45, 'W': 13.6,
-                             'Sr': 0.82, 'Wl': 21.6, 'Wp': 12.8, 'Ip': 8.8, 'Il': 0.1, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None,
-                             'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None,
-                             'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None,
-                             'granulometric_0000': None, 'sample_number': 2, 'type_ground': 7},
-             'modified_data': {'rs': 2.7, 'r': 2.11, 'rd': 1.84, 'n': 32.0, 'e': 0.47,
-                               'W': 14.6, 'Sr': 0.06, 'Wl': 24.8, 'Wp': 14.7, 'Ip': 10.1, 'Il': -0.01, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None,
-                               'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None,
-                               'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None,
-                               'granulometric_0000': None}}, '91-5': {'origin_data': {'rs': 2.71, 'r': 2.18, 'rd': 1.92, 'n': 29.3, 'e': 0.41, 'W': 13.7, 'Sr': 0.9, 'Wl': 21.0, 'Wp': 11.7, 'Ip': 9.3, 'Il': 0.22, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None, 'sample_number': 3, 'type_ground': 7}, 'modified_data': {'rs': 2.79, 'r': 2.32, 'rd': 1.99, 'n': 28.6, 'e': 0.4, 'W': 16.3, 'Sr': 0.08, 'Wl': 19.5, 'Wp': 9.9, 'Ip': 9.6, 'Il': 0.67, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None}}, '91-6': {'origin_data': {'rs': 2.71, 'r': 2.19, 'rd': 1.92, 'n': 29.2, 'e': 0.41, 'W': 14.1, 'Sr': 0.93, 'Wl': 21.9, 'Wp': 12.9, 'Ip': 9.0, 'Il': 0.13, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None, 'sample_number': 4, 'type_ground': 7}, 'modified_data': {'rs': 2.72, 'r': 2.14, 'rd': 1.88, 'n': 31.0, 'e': 0.45, 'W': 14.1, 'Sr': 0.06, 'Wl': 22.8, 'Wp': 10.9, 'Ip': 11.9, 'Il': 0.27, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None}}, '91-9': {'origin_data': {'rs': 2.74, 'r': 1.97, 'rd': 1.53, 'n': 44.1, 'e': 0.79, 'W': 28.7, 'Sr': 1.0, 'Wl': 56.0, 'Wp': 31.8, 'Ip': 24.2, 'Il': -0.13, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None, 'sample_number': 5, 'type_ground': 8}, 'modified_data': {'rs': 2.82, 'r': 2.05, 'rd': 1.53, 'n': 45.7, 'e': 0.84, 'W': 33.7, 'Sr': 0.04, 'Wl': 49.0, 'Wp': 27.1, 'Ip': 21.9, 'Il': 0.3, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None}}, '94-3': {'origin_data': {'rs': 2.71, 'r': 2.15, 'rd': 1.85, 'n': 31.9, 'e': 0.47, 'W': 16.4, 'Sr': 0.95, 'Wl': 24.7, 'Wp': 15.2, 'Ip': 9.5, 'Il': 0.13, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None, 'sample_number': 6, 'type_ground': 7}, 'modified_data': {'rs': 2.71, 'r': 2.14, 'rd': 1.86, 'n': 31.5, 'e': 0.46, 'W': 14.8, 'Sr': 0.06, 'Wl': 24.8, 'Wp': 14.3, 'Ip': 10.5, 'Il': 0.05, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': None, 'granulometric_05': None, 'granulometric_025': None, 'granulometric_01': None, 'granulometric_005': None, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None}}, '94-4': {'origin_data': {'rs': 2.66, 'r': None, 'rd': None, 'n': None, 'e': None, 'W': 5.6, 'Sr': None, 'Wl': None, 'Wp': None, 'Ip': None, 'Il': None, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': 0.3, 'granulometric_1': 0.9, 'granulometric_05': 10.5, 'granulometric_025': 52.8, 'granulometric_01': 21.1, 'granulometric_005': 14.4, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None, 'sample_number': 7, 'type_ground': 3}, 'modified_data': {'rs': 2.42, 'r': None, 'rd': None, 'n': None, 'e': None, 'W': 5.5, 'Sr': None, 'Wl': None, 'Wp': None, 'Ip': None, 'Il': None, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': 1.1, 'granulometric_2': 3.4, 'granulometric_1': 3.0, 'granulometric_05': 4.5, 'granulometric_025': 49.3, 'granulometric_01': 22.1, 'granulometric_005': 16.6, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None}}, '94-5': {'origin_data': {'rs': 2.66, 'r': None, 'rd': None, 'n': None, 'e': None, 'W': 4.9, 'Sr': None, 'Wl': None, 'Wp': None, 'Ip': None, 'Il': None, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': 0.1, 'granulometric_1': 0.4, 'granulometric_05': 0.7, 'granulometric_025': 9.5, 'granulometric_01': 77.8, 'granulometric_005': 11.5, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None, 'sample_number': 8, 'type_ground': 4}, 'modified_data': {'rs': 2.77, 'r': None, 'rd': None, 'n': None, 'e': None, 'W': 5.0, 'Sr': None, 'Wl': None, 'Wp': None, 'Ip': None, 'Il': None, 'Ir': None, 'rd_min': None, 'rd_max': None, 'Kf_min': None, 'Kf_max': None, 'slope_angle_dry': None, 'slope_angle_wet': None, 'granulometric_10': None, 'granulometric_5': None, 'granulometric_2': None, 'granulometric_1': 17.5, 'granulometric_05': 3.61, 'granulometric_025': 27.3, 'granulometric_01': 28.6, 'granulometric_005': 23.0, 'granulometric_001': None, 'granulometric_0002': None, 'granulometric_0000': None}}}
-
+from model import statment
+from model.statment_model import RandomType
+from model.properties_params import GroundTypes
 
 class TablePhysicalProperties(QTableWidget):
     """Класс отрисовывает таблицу физических свойств"""
@@ -76,16 +50,18 @@ class TablePhysicalProperties(QTableWidget):
             for i in range(self.columnCount()):
                 self.item(row, i).setBackground(QtGui.QColor(*color))
 
-    def get_row_by_lab_naumber(self, lab):
+    def get_row_by_lab_number(self, lab):
         """Поиск номера строки по значению лабномера"""
         for row in range(self.columnCount()):
             if self.item(row, 0).text() == lab:
                 return row
         return None
 
-    def set_data(self, data=test_data):
+    def set_data(self):
         """Функция для получения данных"""
         replaceNone = lambda x: x if x != "None" else "-"
+
+        data = statment.getData()
 
         self._clear_table()
 
@@ -135,8 +111,9 @@ class TablePhysicalProperties(QTableWidget):
     def active(self):
         return self.active_laboratory_numbers
 
-
 class OpenWidget(QWidget):
+    signal = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.create_UI()
@@ -162,14 +139,282 @@ class OpenWidget(QWidget):
         self.path_box_layout.addWidget(self.save_button)
         self.savebox_layout.addWidget(self.path_box)
 
-
-
         self.setLayout(self.savebox_layout)
         self.savebox_layout.setContentsMargins(5, 5, 5, 5)
 
-
     def change_directory(self):
         """Самостоятельный выбор папки сохранения"""
-        s = QFileDialog.getExistingDirectory(self, "Select Directory")
+        s = QFileDialog.getOpenFileName(self, "Select file")
+        try:
+            statment.setExcelFile(s[0])
+            self.directory_text.setText(s[0])
+            self.signal.emit()
+        except Exception as err:
+            QMessageBox.critical(self, "Ошибка", f"{str(err)}", QMessageBox.Ok)
+
+class ChooseWidget(QWidget):
+    signal = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.create_UI()
+        self.setFixedHeight(120)
+
+    def create_UI(self):
+
+        self.layout = QVBoxLayout()
+
+        self.box = QGroupBox("Параметры выбора")
+        self.box_layout = QVBoxLayout()
+        self.box.setLayout(self.box_layout)
+
+        self.h1_layout = QHBoxLayout()
+        self.h2_layout = QHBoxLayout()
+        self.all_button = QPushButton("Активировать все")
+        self.all_button.setFixedHeight(30)
+        self.zero_button = QPushButton("Деактивировать все")
+        self.zero_button.setFixedHeight(30)
+
+        self.h1_layout.addWidget(self.all_button)
+        self.h1_layout.addWidget(self.zero_button)
+
+        self.h2_layout.addWidget(QLabel("Фильтр по типу грунта"))
+        self.combobox = QComboBox()
+        self.combobox.addItems(["Не выбрано"] + list(GroundTypes.values()))
+        self.h2_layout.addWidget(self.combobox)
+        self.combobox.setFixedHeight(30)
+        self.combobox.setFixedWidth(300)
+
+        self.box_layout.addLayout(self.h1_layout)
+        self.box_layout.addLayout(self.h2_layout)
+
+        self.layout.addWidget(self.box)
+        self.setLayout(self.layout)
+        self.box_layout.setContentsMargins(5, 5, 5, 5)
+
+class Params(QWidget):
+    signal = pyqtSignal(dict)
+
+    keys = [
+        "rs", "r", "W", "Wl", "Wp", "Ir", "rd_min", "rd_max", "Kf_min", "Kf_max",
+        "slope_angle_dry", "slope_angle_wet", "granulometric", "granulometric_areometer"
+    ]
+
+    initial_params = {
+        "rs": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "r": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "W": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "Wl": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "Wp": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "Ir": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "rd_min": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "rd_max": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "Kf_min": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "Kf_max": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "slope_angle_dry": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "slope_angle_wet": {
+            "type": "Проценты",
+            "value": 10,
+            "active": True
+        },
+        "granulometric": {
+            "type": "Абсолютное значение",
+            "value": 5,
+            "active": True
+        },
+        "granulometric_areometer": {
+            "type": "Абсолютное значение",
+            "value": 5,
+            "active": True
+        }
+    }
+
+    def __init__(self):
+        super().__init__()
+        self.create_UI()
+        self.set_params(self.initial_params)
+        self.setFixedHeight(500)
+        self.setFixedWidth(450)
+
+    def create_UI(self):
+
+        self.savebox_layout = QVBoxLayout()
+
+        self.path_box = QGroupBox("Параметры")
+        self.path_box_layout = QVBoxLayout()
+        self.path_box.setLayout(self.path_box_layout)
+
+        for key in self.keys:
+            setattr(self, f'layout_{key}', QHBoxLayout())
+            layout = getattr(self, f'layout_{key}')
+
+            setattr(self, f'checkbox_active_{key}', QCheckBox())
+            checkbox = getattr(self, f'checkbox_active_{key}')
+            checkbox.setFixedWidth(20)
+            checkbox.setChecked(True)
+            layout.addWidget(checkbox)
+
+            setattr(self, f'label_{key}', QLabel(key))
+            label = getattr(self, f'label_{key}')
+            label.setFixedWidth(120)
+            layout.addWidget(label)
+
+            setattr(self, f'text_min_{key}', QLineEdit())
+            min_text = getattr(self, f'text_min_{key}')
+            min_text.setFixedWidth(50)
+            setattr(self, f'text_max_{key}', QLineEdit())
+            max_text = getattr(self, f'text_max_{key}')
+            max_text.setFixedWidth(50)
+            layout.addWidget(min_text)
+            layout.addWidget(max_text)
+
+            setattr(self, f'check_type_{key}', QComboBox())
+            combobox = getattr(self, f'check_type_{key}')
+            combobox.addItems(["Проценты", "Абсолютное значение", "Диапазон"])
+            combobox.setObjectName(f'check_type_{key}')
+            combobox.activated.connect(self._combo_changed)
+            layout.addWidget(combobox)
+
+            self.path_box_layout.addLayout(layout)
+
+        self.savebox_layout.addWidget(self.path_box)
+        self.button = QPushButton("Крутить")
+        self.button.clicked.connect(self.get_data)
+        self.savebox_layout.addWidget(self.button)
+        self.setLayout(self.savebox_layout)
+        self.savebox_layout.setContentsMargins(5, 5, 5, 5)
+
+    def set_params(self, params):
+        combo = {
+            "Проценты": 0,
+            "Абсолютное значение": 1,
+            "Диапазон": 2
+        }
+
+        for key in params:
+            checkbox = getattr(self, f'checkbox_active_{key}')
+            checkbox.setChecked(params[key]["active"])
+
+            combobox = getattr(self, f'check_type_{key}')
+            combobox.setCurrentIndex(combo[params[key]["type"]])
+            self._set_combo(key, combo[params[key]["type"]])
+
+            if combo[params[key]["type"]] in [0, 1]:
+                min_text = getattr(self, f'text_min_{key}')
+                min_text.setText(str(params[key]["value"]))
+            else:
+                min_text = getattr(self, f'text_min_{key}')
+                min_text.setText(str(params[key]["value"][0]))
+                max_text = getattr(self, f'text_max_{key}')
+                max_text.setText(str(params[key]["value"][1]))
+
+    def _combo_changed(self, value):
+        s = self.sender()
+        key = s.objectName()[11:]
+        self._set_combo(key, value)
+
+    def _set_combo(self, key, value):
+        if value == 2:
+            min_text = getattr(self, f'text_min_{key}')
+            min_text.setFixedWidth(50)
+            max_text = getattr(self, f'text_max_{key}')
+            max_text.show()
+        else:
+            min_text = getattr(self, f'text_min_{key}')
+            min_text.setFixedWidth(106.5)
+            max_text = getattr(self, f'text_max_{key}')
+            max_text.hide()
+
+    def get_data(self):
+        combo = {
+            "Проценты": RandomType.PERCENT,
+            "Абсолютное значение": RandomType.ABSOLUTE,
+            "Диапазон": RandomType.ABSOLUTE_BETWEEN
+        }
+
+        params = {}
+        try:
+            for key in self.keys:
+                checkbox = getattr(self, f'checkbox_active_{key}')
+                if checkbox.isChecked():
+                    combobox = getattr(self, f'check_type_{key}')
+                    type = combo[combobox.currentText()]
+
+                    if type == RandomType.ABSOLUTE_BETWEEN:
+                        try:
+                            min_text = getattr(self, f'text_min_{key}')
+                            min_value = float(min_text.text())
+                            max_text = getattr(self, f'text_max_{key}')
+                            max_value = float(max_text.text())
+
+                            params[key] = {
+                                "type": type,
+                                "value": [min_value, max_value]
+                            }
+                        except Exception:
+                            raise ValueError(f"Ошибка в значениях для параметра {key}")
+
+                        if max_value <= min_value:
+                            raise ValueError(f"Ошибка в значениях для параметра {key}. Максимальное значение должно быть больше минимального")
+
+                    else:
+                        try:
+                            text = getattr(self, f'text_min_{key}')
+                            value = float(text.text())
+
+                            params[key] = {
+                                "type": type,
+                                "value": value
+                            }
+                        except Exception:
+                            raise ValueError(f"Ошибка в значениях для параметра {key}")
+
+            self.signal.emit(params)
+        except Exception as err:
+            QMessageBox.critical(self, "Ошибка", f"{str(err)}", QMessageBox.Ok)
 
 

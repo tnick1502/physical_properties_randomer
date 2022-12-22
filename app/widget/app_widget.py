@@ -1,7 +1,8 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout
 
-from widgets import TablePhysicalProperties, OpenWidget
+from widgets import TablePhysicalProperties, OpenWidget, Params, ChooseWidget
+
+from model import statment
 
 class App(QMainWindow):
     def __init__(self):
@@ -9,7 +10,7 @@ class App(QMainWindow):
         self.title = "Крутяк"
         self.left = 100
         self.top = 30
-        self.width = 1800
+        self.width = 1630
         self.height = 1000
 
         self.setWindowTitle(self.title)
@@ -19,18 +20,32 @@ class App(QMainWindow):
         self.layout = QVBoxLayout()
         self.widget.setLayout(self.layout)
 
+        self.layout2 = QHBoxLayout()
+        self.layout3 = QVBoxLayout()
+
         self.table = TablePhysicalProperties()
         self.open_widget = OpenWidget()
+        self.choose = ChooseWidget()
+        self.params = Params()
 
+        self.layout3.addWidget(self.choose)
+        self.layout3.addWidget(self.params)
+        self.layout2.addWidget(self.table)
+        self.layout3.addStretch(-1)
+        self.layout2.addLayout(self.layout3)
         self.layout.addWidget(self.open_widget)
-        self.layout.addWidget(self.table)
+        self.layout.addLayout(self.layout2)
 
         self.setCentralWidget(self.widget)
 
         self.layout.setContentsMargins(5, 5, 5, 5)
-        self.table.set_data()
-
+        self.open_widget.signal.connect(self.table.set_data)
+        self.params.signal[dict].connect(self.set_random)
         self.show()
+
+    def set_random(self, params):
+        statment.setRandom(params, self.table.active_laboratory_numbers)
+        self.table.set_data()
 
 
     def keyPressEvent(self, event):
@@ -39,10 +54,3 @@ class App(QMainWindow):
                 self.showNormal()
             else:
                 self.showFullScreen()
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    app.setStyle('Fusion')
-    ex = App()
-    sys.exit(app.exec_())

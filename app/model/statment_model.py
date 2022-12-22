@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-from property_model import PhysicalProperties, RandomType
+from model.property_model import PhysicalProperties, RandomType
 
 random_params = {
     "rs": {
@@ -97,9 +97,9 @@ class Statment:
             self.data[laboratory_number] = PhysicalProperties()
             self.data[laboratory_number].defineProperties(data_frame=self.dataframe, number=i)
 
-    def setRandom(self):
-        for key in self.data:
-            self.data[key].setRandom(random_params)
+    def setRandom(self, params, keys):
+        for key in keys:
+            self.data[key].setRandom(params)
 
     def getData(self):
         return {

@@ -22,11 +22,12 @@ from enum import Enum
 from decimal import Decimal
 from typing import Dict, Union
 
-from properties_params import PhysicalPropertyParams
+from model.properties_params import PhysicalPropertyParams
 
 class RandomType(Enum):
     PERCENT = "PERCENT"
     ABSOLUTE = "ABSOLUTE"
+    ABSOLUTE_BETWEEN = "ABSOLUTE_BETWEEN"
 
 class DataTypeValidation:
     """Data type validation"""
@@ -165,17 +166,18 @@ class PhysicalProperties:
 
             cycles_count = 10
             decrease_parameter = 1
+            between = True if random_params[param]["type"] == RandomType.ABSOLUTE_BETWEEN else False
 
             while True:
                 if param == "granulometric":
-                    self.randomGran(granKeys, (random_params[param]["value"]) / decrease_parameter)
+                    self.randomGran(granKeys, (random_params[param]["value"]) / decrease_parameter if not between else random_params[param]["value"])
                 elif param == "granulometric_areometer":
-                    self.randomGran(granKeysAreometer, random_params[param]["value"] / decrease_parameter)
+                    self.randomGran(granKeysAreometer, random_params[param]["value"] / decrease_parameter if not between else random_params[param]["value"])
                 else:
                     self.randomParam(
                         param_name=param,
                         param_type=random_params[param]["type"],
-                        param_value=random_params[param]["value"] / decrease_parameter
+                        param_value=random_params[param]["value"] / decrease_parameter if not between else random_params[param]["value"]
                     )
 
                     if param not in ["rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet"]:
@@ -206,6 +208,9 @@ class PhysicalProperties:
             elif param_type == RandomType.ABSOLUTE:
                 random_value = original_value + np.random.uniform(
                     param_value, -param_value)
+
+            elif param_type == RandomType.ABSOLUTE_BETWEEN:
+                random_value = np.random.uniform(param_value[0], param_value[1])
 
             accuracy = Decimal(str(original_value)).as_tuple().exponent * (-1)
 
