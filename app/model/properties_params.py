@@ -17,6 +17,7 @@ PhysicalPropertyParams = {
     "rd_max": ['AD', 29],
     "slope_angle_dry": ['AF', 31],
     "slope_angle_wet": ['AG', 32],
+    "ground_name": ['D', 3],
     "granulometric_10": ['E', 4],
     "granulometric_5": ['F', 5],
     "granulometric_2": ['G', 6],

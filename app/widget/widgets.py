@@ -2,15 +2,31 @@ from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem, QTableWidget, QWidget
     QLineEdit, QPushButton, QLabel, QFileDialog, QMessageBox, QCheckBox, QComboBox
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import QtGui
+import json
+import os
 
 from model import statment
 from model.statment_model import RandomType
 from model.properties_params import GroundTypes
 
+PARAMS_PATH = "Z:/Digitrock/randomerParams.json"
+
+def open_json() -> dict:
+    """Считывание json файла в словарь"""
+    with open(PARAMS_PATH, 'r', encoding='utf-8') as file:
+        json_data = json.load(file)
+    return json_data
+
+def write_json(data: dict) -> None:
+    """Запись словаря в json файл. Если файл отсутствует, то создается новый"""
+    with open(PARAMS_PATH, 'w', encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False)
+
+
 class TablePhysicalProperties(QTableWidget):
     """Класс отрисовывает таблицу физических свойств"""
     keys = [
-        "rs", "r", "rd", "n", "e", "W", "Sr",
+        "type_ground", "rs", "r", "rd", "n", "e", "W", "Sr",
         "Wl", "Wp", "Ip", "Il", "Ir",
         "rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet",
         "granulometric_10", "granulometric_5", "granulometric_2",
@@ -34,7 +50,7 @@ class TablePhysicalProperties(QTableWidget):
 
         self.setRowCount(31)
         self.setColumnCount(len(self.keys) + 1)
-        self.setHorizontalHeaderLabels(["Лаб. номер"] + [key.replace("granulometric_", "") for key in self.keys])
+        self.setHorizontalHeaderLabels(["Лаб. номер", "Наименование"] + [key.replace("granulometric_", "") for key in self.keys if key != "type_ground"])
 
         self.verticalHeader().setMinimumSectionSize(30)
 
@@ -42,7 +58,6 @@ class TablePhysicalProperties(QTableWidget):
         self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
 
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-
 
     def set_row_color(self, row, color=(129, 216, 208)):#color=(62, 180, 137)):
         """Раскрашиваем строку"""
@@ -96,10 +111,14 @@ class TablePhysicalProperties(QTableWidget):
             self.setItem(2 * i, 1, item)
 
             for g, value in enumerate([str(data[lab]["origin_data"][key]) for key in self.keys]):
+                if g == 0:
+                    value = GroundTypes[int(value)]
                 item = QTableWidgetItem(replaceNone(value))
                 item.setTextAlignment(Qt.AlignCenter)
                 self.setItem(2 * i, g + 1, item)
             for g, value in enumerate([str(data[lab]["modified_data"][key]) for key in self.keys]):
+                if g == 0:
+                    value = GroundTypes[int(value)]
                 item = QTableWidgetItem(replaceNone(value))
                 item.setTextAlignment(Qt.AlignCenter)
                 self.setItem(2 * i + 1, g + 1, item)
@@ -208,9 +227,13 @@ class ChooseWidget(QWidget):
 
         self.zero_button.clicked.connect(lambda: self.signal.emit([]))
         self.all_button.clicked.connect(lambda: self.signal.emit(list(statment.data.keys())))
-        self.combo_box.activated.connect(self._combo_changed)
+        self.combobox.activated.connect(self._combo_changed)
 
-    def _combo_changed(self):
+    def _combo_changed(self, value):
+        if value == 0:
+            self.signal.emit(list(statment.data.keys()))
+        else:
+            self.signal.emit([key for key in statment.data.keys() if statment.data[key].type_ground == value])
 
 class Params(QWidget):
     signal = pyqtSignal(dict)
@@ -293,9 +316,22 @@ class Params(QWidget):
         }
     }
 
+    params = {}
+
     def __init__(self):
         super().__init__()
         self.create_UI()
+
+        if os.path.exists(PARAMS_PATH):
+            self.params = open_json()
+        else:
+            write_json({
+                "По умолчанию": self.initial_params
+            })
+            self.params["По умолчанию"] = self.initial_params
+
+        self.combobox.addItems(list(self.params.keys()))
+
         self.set_params(self.initial_params)
         self.setFixedHeight(550)
         self.setFixedWidth(450)
@@ -311,7 +347,6 @@ class Params(QWidget):
         self.h2_layout = QHBoxLayout()
 
         self.combobox = QComboBox()
-        self.combobox.addItems(["По умолчанию"] + list(GroundTypes.values()))
         self.combobox.setFixedHeight(30)
         self.h1_layout.addWidget(self.combobox)
 
@@ -325,8 +360,6 @@ class Params(QWidget):
 
         self.box_layout.addLayout(self.h1_layout)
         self.box_layout.addLayout(self.h2_layout)
-
-
 
 
         self.path_box = QGroupBox("Параметры")
@@ -371,6 +404,8 @@ class Params(QWidget):
         self.button = QPushButton("Крутить")
         self.button.setFixedHeight(30)
         self.button.clicked.connect(self.get_data)
+        self.param_save_button.clicked.connect(self.save_params)
+        self.combobox.activated.connect(self._combo_param_changed)
         self.savebox_layout.addWidget(self.button)
         self.setLayout(self.savebox_layout)
         self.savebox_layout.setContentsMargins(5, 5, 5, 5)
@@ -392,17 +427,27 @@ class Params(QWidget):
 
             if combo[params[key]["type"]] in [0, 1]:
                 min_text = getattr(self, f'text_min_{key}')
-                min_text.setText(str(params[key]["value"]))
+                if params[key]["value"]:
+                    min_text.setText(str(params[key]["value"]))
             else:
                 min_text = getattr(self, f'text_min_{key}')
-                min_text.setText(str(params[key]["value"][0]))
+                if params[key]["value"][0]:
+                    min_text.setText(str(params[key]["value"][0]))
                 max_text = getattr(self, f'text_max_{key}')
-                max_text.setText(str(params[key]["value"][1]))
+                if params[key]["value"][1]:
+                    max_text.setText(str(params[key]["value"][1]))
 
     def _combo_changed(self, value):
         s = self.sender()
         key = s.objectName()[11:]
         self._set_combo(key, value)
+
+    def _combo_param_changed(self):
+        try:
+            text = self.combobox.currentText()
+            self.set_params(self.params[text])
+        except Exception as err:
+            print(err)
 
     def _set_combo(self, key, value):
         if value == 2:
@@ -461,6 +506,63 @@ class Params(QWidget):
                             raise ValueError(f"Ошибка в значениях для параметра {key}")
 
             self.signal.emit(params)
+        except Exception as err:
+            QMessageBox.critical(self, "Ошибка", f"{str(err)}", QMessageBox.Ok)
+
+    def _get(self):
+        params = {}
+
+        for key in self.keys:
+            checkbox = getattr(self, f'checkbox_active_{key}')
+            active = True if checkbox.isChecked() else False
+
+            combobox = getattr(self, f'check_type_{key}')
+            type = combobox.currentText()
+
+            if type == "Диапазон":
+                min_text = getattr(self, f'text_min_{key}')
+                min_value = float(min_text.text()) if min_text.text() else None
+                max_text = getattr(self, f'text_max_{key}')
+                max_value = float(max_text.text()) if max_text.text() else None
+
+                params[key] = {
+                    "active": active,
+                    "type": type,
+                    "value": [min_value, max_value]
+                }
+            else:
+                text = getattr(self, f'text_min_{key}')
+                value = float(text.text()) if text.text() else None
+
+                params[key] = {
+                    "active": active,
+                    "type": type,
+                    "value": value
+                }
+        return params
+
+    def save_params(self):
+        try:
+            text = self.param_save_line.text()
+            if not text:
+                QMessageBox.critical(self, "Ошибка", f"Заполните поле названия", QMessageBox.Ok)
+            else:
+                if text in list(self.params.keys()):
+                    ret = QMessageBox.question(self, 'Предупреждение',
+                                               f"Параметр {text} уже существует. Хотите перезаписать?",
+                                               QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+                    if ret == QMessageBox.Yes:
+                        self.params[text] = self._get()
+                        write_json(self.params)
+                        self.combobox.addItems([text])
+                        self.combobox.setCurrentText(text)
+                        QMessageBox.about(self, "Сообщение", "Успешно сохранено")
+                else:
+                    self.params[text] = self._get()
+                    write_json(self.params)
+                    self.combobox.addItems([text])
+                    self.combobox.setCurrentText(text)
+                    QMessageBox.about(self, "Сообщение", "Успешно сохранено")
         except Exception as err:
             QMessageBox.critical(self, "Ошибка", f"{str(err)}", QMessageBox.Ok)
 

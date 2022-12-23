@@ -88,6 +88,7 @@ class PhysicalProperties:
     granulometric_0000 = DataTypeValidation(float)
     sample_number = DataTypeValidation(int)
     type_ground = DataTypeValidation(int)
+    ground_name = DataTypeValidation(str)
 
     rs_modified = DataTypeValidation(float)
     r_modified = DataTypeValidation(float)
@@ -118,6 +119,7 @@ class PhysicalProperties:
     granulometric_001_modified = DataTypeValidation(float)
     granulometric_0002_modified = DataTypeValidation(float)
     granulometric_0000_modified = DataTypeValidation(float)
+    type_ground_modified = DataTypeValidation(int)
 
     def __init__(self, headler=None):
         if not headler:
@@ -183,10 +185,10 @@ class PhysicalProperties:
                     if param not in ["rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet"]:
                         self.reCalculateProperties()
 
-                type_ground = PhysicalProperties.define_type_ground(
+                self.type_ground_modified = PhysicalProperties.define_type_ground(
                     self.granDictModified(), self.Ir_modified, self.Ip_modified)
 
-                if self.type_ground == type_ground and (
+                if self.type_ground == self.type_ground_modified and (
                         (self.e - 0.05 < self.e_modified < self.e + 0.05) if self.e else True
                 ):
                     break
