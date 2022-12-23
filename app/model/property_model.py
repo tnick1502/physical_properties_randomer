@@ -261,17 +261,18 @@ class PhysicalProperties:
                 if value:
                     if percent >= value:
                         val = np.round(np.random.uniform(0, value + percent), 1)
-                        setattr(self, key, val if val else None)
+                        setattr(self, key, float('{:.1f}'.format(val)) if val else None)
                     else:
                         val = np.round(np.random.uniform(value - percent, value + percent), 1)
-                        setattr(self, key, val if val else None)
+                        setattr(self, key, float('{:.1f}'.format(val)) if val else None)
                 else:
                     if change:
                         right_zero_key = key
                     else:
                         left_zero_key = key
 
-            balance = self.calculateGranBalance()
+            balance = float('{:.1f}'.format(self.calculateGranBalance()))
+
 
         zero_keys = [key for key in [left_zero_key, right_zero_key] if key]
 
