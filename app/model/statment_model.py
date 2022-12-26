@@ -98,8 +98,12 @@ class Statment:
             self.data[laboratory_number].defineProperties(data_frame=self.dataframe, number=i)
 
     def setRandom(self, params, keys):
+        problem_keys = []
         for key in keys:
-            self.data[key].setRandom(params)
+            res = self.data[key].setRandom(params)
+            if not res:
+                problem_keys.append(key)
+        return problem_keys
 
     def getData(self):
         return {

@@ -170,7 +170,10 @@ class PhysicalProperties:
             decrease_parameter = 1
             between = True if random_params[param]["type"] == RandomType.ABSOLUTE_BETWEEN else False
 
-            while True:
+            count = 1000
+            done = True
+
+            while done:
                 if param == "granulometric":
                     self.randomGran(granKeys, (random_params[param]["value"]) / decrease_parameter if not between else random_params[param]["value"])
                 elif param == "granulometric_areometer":
@@ -191,13 +194,22 @@ class PhysicalProperties:
                 if self.type_ground == self.type_ground_modified and (
                         (self.e - 0.05 < self.e_modified < self.e + 0.05) if self.e else True
                 ):
-                    break
+                    done = False
                 else:
                     cycles_count -= 1
 
                 if cycles_count == 0:
                     decrease_parameter += 1
                     cycles_count = 10
+
+                count += 1
+                if count >= 100000:
+                    for key in PhysicalProperties.__dict__:
+                        if "modified" in key:
+                            object.__setattr__(self, key, getattr(self, key[:-9]))
+                    return False
+
+        return True
 
     def randomParam(self, param_name: str, param_type: str, param_value: float):
         """Получение значений рандомного параметра для заданных значений"""
@@ -252,35 +264,32 @@ class PhysicalProperties:
         balance = self.calculateGranBalance()
         if balance == 100.:
             return
-        else:
+
+        while True:
             balance = -1
-
-        while balance < 0:
-            for key in keys:
-                value = getattr(self, key)
-                if value:
-                    if percent >= value:
-                        val = np.round(np.random.uniform(0, value + percent), 1)
-                        setattr(self, key, float('{:.1f}'.format(val)) if val else None)
+            while balance < 0:
+                for key in keys:
+                    value = getattr(self, key[:-9])
+                    if value:
+                        val = np.round(np.random.uniform(value - (value * percent / 100), value + (value * percent / 100)), 1)
+                        setattr(self, key, float('{:.1f}'.format(val)) if (val or val == 0.0) else None)
                     else:
-                        val = np.round(np.random.uniform(value - percent, value + percent), 1)
-                        setattr(self, key, float('{:.1f}'.format(val)) if val else None)
-                else:
-                    if change:
-                        right_zero_key = key
-                    else:
-                        left_zero_key = key
+                        if change:
+                            right_zero_key = key
+                        else:
+                            left_zero_key = key
+                balance = float('{:.1f}'.format(self.calculateGranBalance()))
 
+            zero_keys = [key for key in [left_zero_key, right_zero_key] if key]
+
+            if len(zero_keys):
+                setattr(self, np.random.choice(zero_keys), balance)
+            else:
+                key = np.random.choice(keys)
+                setattr(self, key, getattr(self, key) + balance)
             balance = float('{:.1f}'.format(self.calculateGranBalance()))
-
-
-        zero_keys = [key for key in [left_zero_key, right_zero_key] if key]
-
-        if len(zero_keys):
-            setattr(self, np.random.choice(zero_keys), balance)
-        else:
-            key = np.random.choice(keys)
-            setattr(self, key, getattr(self, key) + balance)
+            if abs(balance) <= 0.01:
+                break
 
     def calculateGranBalance(self):
         """Расчет остатка процентов по грансоставу, чтобы суммарно было 100"""

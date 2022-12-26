@@ -45,8 +45,17 @@ class App(QMainWindow):
         self.show()
 
     def set_random(self, params):
-        statment.setRandom(params, self.table.active_laboratory_numbers)
-        self.table.set_data(self.table.active_laboratory_numbers)
+            problem_keys = statment.setRandom(params, self.table.active_laboratory_numbers)
+            print(problem_keys)
+            for key in problem_keys:
+                row = self.table.get_row_by_lab_number(key)
+                print(statment.data[key])
+                try:
+                    self.table.set_row_color(2 * row, (255, 0, 0))
+                except Exception as err:
+                    print(err)
+
+            self.table.set_data(self.table.active_laboratory_numbers)
 
 
     def keyPressEvent(self, event):

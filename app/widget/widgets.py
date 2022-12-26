@@ -68,8 +68,11 @@ class TablePhysicalProperties(QTableWidget):
     def get_row_by_lab_number(self, lab):
         """Поиск номера строки по значению лабномера"""
         for row in range(self.columnCount()):
-            if self.item(row, 0).text() == lab:
-                return row
+            try:
+                if self.item(row, 0).text() == lab:
+                    return row
+            except:
+                pass
         return None
 
     def filter(self, lab_numbers):
@@ -133,7 +136,6 @@ class TablePhysicalProperties(QTableWidget):
                 self.active_laboratory_numbers.append(item.text())
             elif item.checkState() == Qt.Unchecked:
                 self.active_laboratory_numbers.remove(item.text())
-
 
     def get_labels(self):
         header = self.table.horizontalHeader()
@@ -305,12 +307,12 @@ class Params(QWidget):
             "active": True
         },
         "granulometric": {
-            "type": "Абсолютное значение",
+            "type": "Проценты",
             "value": 5,
             "active": True
         },
         "granulometric_areometer": {
-            "type": "Абсолютное значение",
+            "type": "Проценты",
             "value": 5,
             "active": True
         }
@@ -392,7 +394,10 @@ class Params(QWidget):
 
             setattr(self, f'check_type_{key}', QComboBox())
             combobox = getattr(self, f'check_type_{key}')
-            combobox.addItems(["Проценты", "Абсолютное значение", "Диапазон"])
+            if "gran" in key:
+                combobox.addItems(["Проценты"])
+            else:
+                combobox.addItems(["Проценты", "Абсолютное значение", "Диапазон"])
             combobox.setObjectName(f'check_type_{key}')
             combobox.activated.connect(self._combo_changed)
             layout.addWidget(combobox)
