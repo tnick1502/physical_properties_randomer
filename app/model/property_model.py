@@ -166,7 +166,7 @@ class PhysicalProperties:
 
         for param in random_params:
 
-            cycles_count = 10
+            cycles_count = 100
             decrease_parameter = 1
             between = True if random_params[param]["type"] == RandomType.ABSOLUTE_BETWEEN else False
 
@@ -175,9 +175,9 @@ class PhysicalProperties:
 
             while done:
                 if param == "granulometric":
-                    self.randomGran(granKeys, (random_params[param]["value"]) / decrease_parameter if not between else random_params[param]["value"])
+                    self.randomGran(granKeys, (random_params[param]["value"]) / decrease_parameter)
                 elif param == "granulometric_areometer":
-                    self.randomGran(granKeysAreometer, random_params[param]["value"] / decrease_parameter if not between else random_params[param]["value"])
+                    self.randomGran(granKeysAreometer, random_params[param]["value"] / decrease_parameter)
                 else:
                     self.randomParam(
                         param_name=param,
@@ -209,10 +209,12 @@ class PhysicalProperties:
 
                 if cycles_count == 0:
                     decrease_parameter += 1
-                    cycles_count = 10
+                    cycles_count = 100
+
+                print(param, decrease_parameter)
 
                 count += 1
-                if count >= 100000:
+                if count >= 10000:
                     for key in PhysicalProperties.__dict__:
                         if "modified" in key:
                             object.__setattr__(self, key, getattr(self, key[:-9]))
@@ -347,8 +349,17 @@ class PhysicalProperties:
         for i in range(10):
             accumulate_gran.append(accumulate_gran[i] + none_to_zero(data_gran[gran_struct[i + 1]]))
 
+        accumulate_gran_clay = 0
+        for i in gran_struct[2:8]:
+            accumulate_gran_clay += none_to_zero(data_gran[i])
+
+        accumulate_gran_big = 0
+        for i in gran_struct[:3]:
+            accumulate_gran_big += none_to_zero(data_gran[i])
+
         if none_to_zero(Ir) >= 50:  # содержание органического вещества Iom=hg10=Ir
             type_ground = 9  # Торф
+
         elif none_to_zero(Ip) < 1:  # число пластичности
             if accumulate_gran[2] > 25:
                 type_ground = 1  # Песок гравелистый
@@ -360,12 +371,51 @@ class PhysicalProperties:
                 type_ground = 4  # Песок мелкий
             else:
                 type_ground = 5  # Песок пылеватый
-        elif 1 <= Ip < 7:
-            type_ground = 6  # Супесь
-        elif 7 <= Ip < 17:
-            type_ground = 7  # Суглинок
-        else:  # data['Ip'] >= 17:
-            type_ground = 8  # Глина
+
+        elif (Ip >= 1) and (15 <= accumulate_gran_big <= 25):
+            type_ground = 15  # Супесь, суглинок, глина с галькой (щебнем), с гравием (дресвой) или ракушкой
+
+        elif (Ip >= 1) and (25 < accumulate_gran_big <= 50):
+            type_ground = 16  # Супесь, суглинок, глина галечниковые (щебенистые), гравелистые (дресвяные) или ракушечные
+
+        elif 1 <= Ip <= 7:
+            if accumulate_gran_clay == 0:
+                type_ground = 17  # Супесь
+            else:
+                if accumulate_gran_clay >= 50:
+                    type_ground = 6  # Супесь песчанистая
+                else:
+                    type_ground = 7  # Супесь пылеватая
+
+        elif 7 < Ip <= 12:
+            if accumulate_gran_clay == 0:
+                type_ground = 18  # Суглинок
+            else:
+                if accumulate_gran_clay >= 40:
+                    type_ground = 8  # Суглинок легкий песчанистый
+                else:
+                    type_ground = 9  # Суглинок легкий пылеватый
+
+        elif 12 < Ip <= 17:
+            if accumulate_gran_clay == 0:
+                type_ground = 18  # Суглинок
+            else:
+                if accumulate_gran_clay >= 40:
+                    type_ground = 10  # Суглинок тяжелый песчанистый
+                else:
+                    type_ground = 11  # Суглинок тяжелый пылеватый
+
+        elif 17 < Ip <= 27:
+            if accumulate_gran_clay == 0:
+                type_ground = 19  # Глина
+            else:
+                if accumulate_gran_clay >= 40:
+                    type_ground = 12  # Глина легкая песчанистая
+                else:
+                    type_ground = 13  # Глина легкая пылеватая
+
+        elif Ip > 27:
+            type_ground = 14  # Глина тяжелая
 
         return type_ground
 

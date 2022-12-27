@@ -45,10 +45,12 @@ class App(QMainWindow):
         self.show()
 
     def set_random(self, params):
-        active = self.table.active_laboratory_numbers
-        problem_keys = statment.setRandom(params, active)
-        print(problem_keys)
-        self.table.set_data(active_keys=active, problem_keys=problem_keys)
+        try:
+            active = self.table.active_laboratory_numbers
+            problem_keys = statment.setRandom(params, active)
+            self.table.set_data(active_keys=active, problem_keys=problem_keys)
+        except Exception as e:
+            print(e)
 
     def keyPressEvent(self, event):
         if str(event.key()) == "16777216":
