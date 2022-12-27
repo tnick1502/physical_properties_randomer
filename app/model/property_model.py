@@ -182,8 +182,17 @@ class PhysicalProperties:
                     self.randomParam(
                         param_name=param,
                         param_type=random_params[param]["type"],
-                        param_value=random_params[param]["value"] / decrease_parameter if not between else random_params[param]["value"]
+                        param_value=random_params[param]["value"] / decrease_parameter if not between else
+                        random_params[param]["value"]
                     )
+
+                    while self.Wp_modified == self.Wl_modified:
+                        self.randomParam(
+                            param_name=param,
+                            param_type=random_params[param]["type"],
+                            param_value=random_params[param]["value"] / decrease_parameter if not between else
+                            random_params[param]["value"]
+                        )
 
                     if param not in ["rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet"]:
                         self.reCalculateProperties()

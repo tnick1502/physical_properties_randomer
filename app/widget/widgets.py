@@ -87,7 +87,7 @@ class TablePhysicalProperties(QTableWidget):
             except:
                 pass
 
-    def set_data(self, active_keys=None):
+    def set_data(self, active_keys=None, problem_keys=[]):
         """Функция для получения данных"""
         replaceNone = lambda x: x if x != "None" else "-"
 
@@ -127,7 +127,10 @@ class TablePhysicalProperties(QTableWidget):
                 self.setItem(2 * i + 1, g + 1, item)
 
         for i, lab in enumerate(data):
-            self.set_row_color(2 * i, (192, 192, 192))
+            if lab in problem_keys:
+                self.set_row_color(2 * i, (155, 27, 48))
+            else:
+                self.set_row_color(2 * i, (147, 169, 209))
             self.setSpan(2 * i, 0, 2, 1)
 
     def handleItemClicked(self, item):
