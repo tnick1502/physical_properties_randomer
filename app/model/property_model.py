@@ -211,8 +211,6 @@ class PhysicalProperties:
                     decrease_parameter += 1
                     cycles_count = 100
 
-                print(param, decrease_parameter)
-
                 count += 1
                 if count >= 10000:
                     for key in PhysicalProperties.__dict__:
