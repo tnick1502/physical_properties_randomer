@@ -170,7 +170,7 @@ class PhysicalProperties:
             decrease_parameter = 1
             between = True if random_params[param]["type"] == RandomType.ABSOLUTE_BETWEEN else False
 
-            count = 1000
+            count = 0
             done = True
 
             while done:
@@ -185,14 +185,14 @@ class PhysicalProperties:
                         param_value=random_params[param]["value"] / decrease_parameter if not between else
                         random_params[param]["value"]
                     )
-
-                    while self.Wp_modified == self.Wl_modified:
-                        self.randomParam(
-                            param_name=param,
-                            param_type=random_params[param]["type"],
-                            param_value=random_params[param]["value"] / decrease_parameter if not between else
-                            random_params[param]["value"]
-                        )
+                    if self.Wp and self.Wl:
+                        while self.Wp_modified == self.Wl_modified:
+                            self.randomParam(
+                                param_name=param,
+                                param_type=random_params[param]["type"],
+                                param_value=random_params[param]["value"] / decrease_parameter if not between else
+                                random_params[param]["value"]
+                            )
 
                     if param not in ["rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet"]:
                         self.reCalculateProperties()
@@ -217,7 +217,6 @@ class PhysicalProperties:
                         if "modified" in key:
                             object.__setattr__(self, key, getattr(self, key[:-9]))
                     return False
-
         return True
 
     def randomParam(self, param_name: str, param_type: str, param_value: float):

@@ -86,6 +86,7 @@ class TablePhysicalProperties(QTableWidget):
                     item.setCheckState(Qt.Unchecked)
             except:
                 pass
+        self.active_laboratory_numbers = lab_numbers
 
     def set_data(self, active_keys=None, problem_keys=[]):
         """Функция для получения данных"""
@@ -128,9 +129,9 @@ class TablePhysicalProperties(QTableWidget):
 
         for i, lab in enumerate(data):
             if lab in problem_keys:
-                self.set_row_color(2 * i, (155, 27, 48))
+                self.set_row_color(2 * i, (221, 65, 36))
             else:
-                self.set_row_color(2 * i, (147, 169, 209))
+                self.set_row_color(2 * i, (231, 210, 186))
             self.setSpan(2 * i, 0, 2, 1)
 
     def handleItemClicked(self, item):
