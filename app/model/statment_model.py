@@ -1,12 +1,12 @@
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import Font
 import xlrd
-import xlutils
-import xlwt
+from xlutils.copy import copy
 import os
+import shutil
 
 from model.property_model import PhysicalProperties, RandomType
+from model.properties_params import PhysicalPropertyParams
 
 random_params = {
     "rs": {
@@ -130,6 +130,50 @@ class Statment:
             key: self.data[key].getData() for key in self.data
         }
 
+    def saveExcel(self) -> None:
+        """Сохранение измененных параметров в эксель
+
+        Копирует исхожный excel файл и записывает в него измененные значения
+
+            :return None
+        """
+        postfix = "ИЗМЕНЕННЫЙ"
+
+        dir, file_name = os.path.split(self.excel_path)
+        _, file_extension = os.path.splitext(self.excel_path)
+        path = os.path.normpath(os.path.join(dir, f'{file_name.replace(file_extension, "")} {postfix}{file_extension}'))
+
+        data = self.getData()
+
+        '''if file_extension == ".xlsx":
+            shutil.copy(self.excel_path, path)
+            sheet: str = "Лист1"
+            wb = load_workbook(path)
+            for labolatory_number in data.keys():
+                for key in data[labolatory_number]["modified_data"]:
+                    if data[labolatory_number]["origin_data"][key] and (
+                            data[labolatory_number]["origin_data"][key] != data[labolatory_number]["modified_data"][
+                            key]):
+                        cell = PhysicalPropertyParams[key][1] + str(
+                            data[labolatory_number]["origin_data"][key]["sample_number"] + 6)
+                        wb[sheet][cell] = data[labolatory_number]["modified_data"][key]
+            wb.save(path)'''
+
+        wb = xlrd.open_workbook(self.excel_path, formatting_info=True)
+        out_wb = copy(wb)
+        sheet = out_wb.get_sheet(0)
+
+        for labolatory_number in data.keys():
+            string = self[labolatory_number].sample_number + 6
+            for key in data[labolatory_number]["modified_data"]:
+                modified_value = data[labolatory_number]["modified_data"][key]
+                original_value = data[labolatory_number]["origin_data"][key]
+                if modified_value and (original_value != modified_value):
+                    column = PhysicalPropertyParams[key][1]
+                    sheet.write(string, column, modified_value)
+
+        out_wb.save(path)
+
     def __iter__(self):
         for key in self.data:
             yield key
@@ -150,46 +194,18 @@ class Statment:
 {data}
 '''
 
-def set_cell_data(path: str, cell: str, value, sheet: str="Лист1", color=None) -> None:
-    """Запись в файл excel
-
-        :argument path: путь к файлу excel
-        :argument cell: Ячейка ('A1', (0, 0))
-        :argument value: Записываемое значение
-        :argument sheet: Лист для записи
-        :argument color: цвет шрифта записи
-
-        :return None
-    """
-    if path.endswith("xlsx"):
-        wb = load_workbook(path)
-        wb[sheet][cell[0]] = value
-        if color:
-            cell = wb[sheet][cell[0]]
-            cell.font = Font(color=color)
-        wb.save(path)
-
-    elif path.endswith("xls"):
-        wb = xlrd.open_workbook(path, formatting_info=True)
-
-        out_wb = xlutils.copy.copy(wb)
-        sheet = out_wb.get_sheet(0)
-
-        if color:
-            xlwt.add_palette_colour("font_colour", 0x21)
-            out_wb.set_colour_RGB(0x21, *tuple(int(color[i:i+2], 16) for i in (0, 2, 4)))
-            style = xlwt.easyxf('font: colour font_colour')
-            sheet.write(cell[1][0] - 1, cell[1][1], value, style)
-        else:
-            sheet.write(cell[1][0] - 1, cell[1][1], value)
-
-        out_wb.save(path)
-
 
 
 if __name__ == "__main__":
     s = Statment()
     #s.setExcelFile('/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls')
-    s.setExcelFile('C:/Users/Пользователь/Desktop/test/test.xls')
-    s.setRandom()
-    print(s.getData())
+    #s.setExcelFile('C:/Users/Пользователь/Desktop/test/test.xls')
+    #s.setRandom()
+    #print(s.getData())
+    excel_path = '/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls'
+    dir, file_name = os.path.split(excel_path)
+    _, file_extension = os.path.splitext(excel_path)
+
+    path = os.path.normpath(os.path.join(dir, f'{file_name.replace(file_extension, "")} ИЗМЕНЕННЫЙ{file_extension}'))
+
+    print(path)

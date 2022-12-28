@@ -173,9 +173,6 @@ class OpenWidget(QWidget):
         self.change_directory_button.clicked.connect(self.change_directory)
         self.path_box_layout.addWidget(self.change_directory_button)
         self.path_box_layout.addWidget(self.directory_text)
-        self.save_button = QPushButton("Сохранить")
-        self.save_button.setFixedHeight(30)
-        self.path_box_layout.addWidget(self.save_button)
         self.savebox_layout.addWidget(self.path_box)
 
         self.setLayout(self.savebox_layout)
