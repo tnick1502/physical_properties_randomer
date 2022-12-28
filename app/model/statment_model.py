@@ -1,9 +1,7 @@
 import pandas as pd
-from openpyxl import load_workbook
 import xlrd
 from xlutils.copy import copy
 import os
-import shutil
 
 from model.property_model import PhysicalProperties, RandomType
 from model.properties_params import PhysicalPropertyParams
