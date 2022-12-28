@@ -1,4 +1,9 @@
 import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import Font
+import xlrd
+import xlutils
+import xlwt
 import os
 
 from model.property_model import PhysicalProperties, RandomType
@@ -83,8 +88,12 @@ class Statment:
             cls.instance = super(Statment, cls).__new__(cls)
         return cls.instance
 
-    def setExcelFile(self, path: str):
-        """Открытие файла excel"""
+    def setExcelFile(self, path: str) -> None:
+        """Открытие и загрузка файла excel
+
+            :argument path: путь к файлу
+            :return None
+        """
         if not all([os.path.exists(path), (path.endswith('.xls') or path.endswith('.xlss'))]):
             raise Exception("Wrong file excel")
 
@@ -97,7 +106,13 @@ class Statment:
             self.data[laboratory_number] = PhysicalProperties()
             self.data[laboratory_number].defineProperties(data_frame=self.dataframe, number=i)
 
-    def setRandom(self, params, keys):
+    def setRandom(self, params: random_params, keys: list) -> list:
+        """Открытие файла excel
+
+            :argument params: словарь параметров рандома
+            :argument keys: лабномера для ативации на их моделях функции рандома
+            :return лабномера, на которых не получилось применить функцию рандома
+        """
         problem_keys = []
         for key in keys:
             res = self.data[key].setRandom(params)
@@ -105,7 +120,12 @@ class Statment:
                 problem_keys.append(key)
         return problem_keys
 
-    def getData(self):
+    def getData(self) -> dict:
+        """Получение всех параметров
+
+            :return словарь с ключам лабнмеров, по значением в которых словарь с оригинальными
+            зачениями параметров по ключу origin_data и измененными по ключу modified_data
+        """
         return {
             key: self.data[key].getData() for key in self.data
         }
@@ -129,6 +149,41 @@ class Statment:
 Данные:
 {data}
 '''
+
+def set_cell_data(path: str, cell: str, value, sheet: str="Лист1", color=None) -> None:
+    """Запись в файл excel
+
+        :argument path: путь к файлу excel
+        :argument cell: Ячейка ('A1', (0, 0))
+        :argument value: Записываемое значение
+        :argument sheet: Лист для записи
+        :argument color: цвет шрифта записи
+
+        :return None
+    """
+    if path.endswith("xlsx"):
+        wb = load_workbook(path)
+        wb[sheet][cell[0]] = value
+        if color:
+            cell = wb[sheet][cell[0]]
+            cell.font = Font(color=color)
+        wb.save(path)
+
+    elif path.endswith("xls"):
+        wb = xlrd.open_workbook(path, formatting_info=True)
+
+        out_wb = xlutils.copy.copy(wb)
+        sheet = out_wb.get_sheet(0)
+
+        if color:
+            xlwt.add_palette_colour("font_colour", 0x21)
+            out_wb.set_colour_RGB(0x21, *tuple(int(color[i:i+2], 16) for i in (0, 2, 4)))
+            style = xlwt.easyxf('font: colour font_colour')
+            sheet.write(cell[1][0] - 1, cell[1][1], value, style)
+        else:
+            sheet.write(cell[1][0] - 1, cell[1][1], value)
+
+        out_wb.save(path)
 
 
 

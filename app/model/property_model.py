@@ -30,7 +30,11 @@ class RandomType(Enum):
     ABSOLUTE_BETWEEN = "ABSOLUTE_BETWEEN"
 
 class DataTypeValidation:
-    """Data type validation"""
+    """Дескриптор для валидации данных
+
+    Проверяет значение на соответствие заданному типу, в случае несовпадения пытается привести к заданному
+    типу. При невозможности приведения к типу возбуждает ValueError
+    """
     data_type: object = None
 
     def __init__(self, *args):
@@ -121,18 +125,23 @@ class PhysicalProperties:
     granulometric_0000_modified = DataTypeValidation(float)
     type_ground_modified = DataTypeValidation(int)
 
-    def __init__(self, headler=None):
-        if not headler:
-            self.headler = lambda: None
+    def __init__(self, handler=None):
+        if not handler:
+            self.handler = lambda: None
         else:
-            self.headler = headler
+            self.handler = handler
 
         for key in PhysicalProperties.__dict__:
             if isinstance(getattr(PhysicalProperties, key), DataTypeValidation):
                 object.__setattr__(self, key, None)
 
     def defineProperties(self, data_frame: pd.DataFrame, number: int) -> None:
-        """Считывание строки свойств"""
+        """Считывание строки свойств
+
+            :argument data_frame: dataframe excel файла ведомости
+            :argument number: номер строки пробы в dataframe
+            :return None
+        """
         for attr_name in PhysicalPropertyParams:
             setattr(self, attr_name, PhysicalProperties.float_df(
                 data_frame.iat[number, PhysicalPropertyParams[attr_name][1]])
@@ -144,14 +153,18 @@ class PhysicalProperties:
             if "modified" in key:
                 object.__setattr__(self, key, getattr(self, key[:-9]))
 
-    def setRandom(self, random_params: Dict[str, Dict[str, Union[str, float]]]):
-        """Функция наложения рандома
+    def setRandom(self, random_params: Dict[str, Dict[str, Union[str, float]]]) -> bool:
+        """Наложения рандома
 
-        Для каждого параметра начинается проход по 10 циклов.
-        Если за 10 циклов не получилось получить рандом,
+        Для каждого параметра начинается проход по 100 циклов.
+        Если за 100 циклов не получилось получить рандом,
         удовлетворяющий условиям (не меняется тип грунта, e меняется в пределах 0.05), то
-        decrease_parameter увеличивается на 1 (данный параметр уменьшает величину приращения)
+        decrease_parameter увеличивается на 1 (данный параметр уменьшает величину приращения).
+        Если за 1000 прохождений не удалось получить результат, то возвращается False и устанавливаются
+        оригинальные значения
 
+            :argument random_params: словарь рандомных параметров
+            :return успешность выпоненния функции
         """
 
         granKeys = [
@@ -219,8 +232,14 @@ class PhysicalProperties:
                     return False
         return True
 
-    def randomParam(self, param_name: str, param_type: str, param_value: float):
-        """Получение значений рандомного параметра для заданных значений"""
+    def randomParam(self, param_name: str, param_type: str, param_value: float) -> None:
+        """Получение значений рандомного параметра для заданных значений
+
+            :argument param_name: имя параметра
+            :argument param_type: тип вариации параметра (проценты, абсолютное значение, диапазон)
+            :argument param_value: значение оригинального параметра
+            :return None
+        """
         original_value = getattr(self, param_name)
         if original_value:
             if param_type == RandomType.PERCENT:
@@ -238,20 +257,37 @@ class PhysicalProperties:
 
             setattr(self, f'{param_name}_modified', np.round(random_value, accuracy))
 
-    def granDict(self):
+    def granDict(self) -> dict:
+        """Получение словаря с грансоставом оригинальных значний
+
+            :return словарь со значениями грансостава по ключам
+        """
         data_gran = {}
         for key in ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']:
             data_gran[key] = getattr(self, f"granulometric_{key}")
         return data_gran
 
-    def granDictModified(self):
+    def granDictModified(self) -> dict:
+        """Получение словаря с грансоставом модифицированных значний
+
+            :return словарь со значениями грансостава по ключам
+        """
         data_gran = {}
         for key in ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']:
             data_gran[key] = getattr(self, f"granulometric_{key}_modified")
         return data_gran
 
-    def reCalculateProperties(self):
-        """Пересчет свойств грунтов при изменении ключевых параметров"""
+    def reCalculateProperties(self) -> None:
+        """Пересчет свойств грунтов при изменении ключевых параметров
+
+        Изменяемые параметры:
+            rs, r, W, WL, WP, Угол откоса, rd_min, rd_max, Kf_min, Kf_max, Ir
+
+        Пересчитываемые параметры:
+            rd, e, n, Ip, Il, Sr
+
+            :return None
+        """
         if self.r:
             self.rd_modified = PhysicalProperties.define_rd(self.r_modified, self.W_modified)
             self.Sr_modified = PhysicalProperties.define_Sr(self.W_modified, self.r_modified,
@@ -264,7 +300,17 @@ class PhysicalProperties:
             self.Il_modified = PhysicalProperties.define_Il(self.W_modified, self.Wl_modified,
                                                             self.Wp_modified)
 
-    def randomGran(self, keys, percent):
+    def randomGran(self, keys, percent) -> None:
+        """Наложение рандома на грансостав
+
+        Функция накладывает рандом на гран состав, при этом считая общий баланс грансостава (должно быть 100%).
+        После наложения рандома остаточный дисбаланс перекидывается на пустые ячейки справа или слева, далее
+        расчитывается дисбаланс еще раз, цикл прекращается при общем дисбалансе < 0.01
+
+            :argument keys: ключи для применения функции. Используются для отделения ареометра
+            :argument percent: процент ихменения для вариации параметров
+            :return None
+        """
         left_zero_key = None
         right_zero_key = None
         change = False
@@ -299,8 +345,13 @@ class PhysicalProperties:
             if abs(balance) <= 0.01:
                 break
 
-    def calculateGranBalance(self):
-        """Расчет остатка процентов по грансоставу, чтобы суммарно было 100"""
+    def calculateGranBalance(self) -> float:
+        """Расчет остатка процентов по грансоставу
+
+        Возвращает 100, если грансостав не задан
+
+            :return float
+        """
         return 100. - sum(
             [value for value in [
                 self.granulometric_10_modified, self.granulometric_5_modified, self.granulometric_2_modified,
@@ -309,6 +360,20 @@ class PhysicalProperties:
                 self.granulometric_0002_modified, self.granulometric_0000_modified
             ] if value]
         )
+
+    def getData(self) -> dict:
+        """Получение всех параметров
+
+            :return словарь с оригинальными зачениями параметров по ключу origin_data и измененными по ключу modified_data
+        """
+        return {
+            "origin_data": {
+                attr_name: self.__dict__[attr_name] for attr_name in self.__dict__
+                if "modified" not in attr_name and "headler" not in attr_name
+            },
+            "modified_data": {
+                attr_name[:-9]: self.__dict__[attr_name] for attr_name in self.__dict__ if "modified" in attr_name}
+        }
 
     def __repr__(self):
         origin_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" not in attr_name and "headler" not in attr_name])
@@ -320,25 +385,20 @@ class PhysicalProperties:
         {modified_data}
         """
 
-    def getData(self):
-        return {
-            "origin_data": {
-                attr_name: self.__dict__[attr_name] for attr_name in self.__dict__
-                if "modified" not in attr_name and "headler" not in attr_name
-            },
-            "modified_data": {
-                attr_name[:-9]: self.__dict__[attr_name] for attr_name in self.__dict__ if "modified" in attr_name}
-        }
-
     def __setattr__(self, key, value):
         if "modified" in key:
-            self.headler()
+            self.handler()
         object.__setattr__(self, key, value)
-
 
     @staticmethod
     def define_type_ground(data_gran: dict, Ir: float, Ip: float) -> int:
-        """Функция определения типа грунта через грансостав"""
+        """Функция определения типа грунта через грансостав
+
+            :argument data_gran: словарь грансостава, полуенный из granDict или granDictModified
+            :argument Ir: содержание органики
+            :argument Ip: число пластичности
+            :return тип грунта
+        """
         none_to_zero = lambda x: 0 if not x else x
 
         gran_struct = ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']  # гран состав
@@ -418,30 +478,72 @@ class PhysicalProperties:
 
     @staticmethod
     def define_rd(r: float, W: float) -> float:
+        """Функция определения плотности сухого грунта
+
+            :argument r: плотность грунта, г/см3
+            :argument W: влажность
+            :return rd, г/см3
+        """
         return np.round(r / (1 + (W / 100)), 2)
 
     @staticmethod
     def define_e(rs: float, rd: float) -> float:
+        """Функция определения коэффициента пористости
+
+            :argument rs: плотность частиц грунта, г/см3
+            :argument rd: плотность сухого грунта, г/см3
+            :return коэффициент пористости
+        """
         return np.round((rs - rd) / rd, 2)
 
     @staticmethod
     def define_n(e: float) -> float:
+        """Функция определения пористости
+
+            :argument e: плотность частиц грунта, г/см3
+            :return пористость
+        """
         return np.round((e / (1 + e)) * 100, 1)
 
     @staticmethod
     def define_Ip(Wl: float, Wp: float) -> float:
+        """Функция определения числа сластичности
+
+            :argument Wl: граница текучести, %
+            :argument Wp: граница раскатывания, %
+            :return число пластичности
+        """
         return np.round(Wl - Wp, 2)
 
     @staticmethod
     def define_Il(W: float, Wl: float, Wp: float) -> float:
+        """Функция определения показателя текучести
+
+            :argument W: влажность, %
+            :argument Wl: граница текучести, %
+            :argument Wp: граница раскатывания, %
+            :return показатель текучести
+        """
         return np.round((W - Wp) / (Wl - Wp), 2)
 
     @staticmethod
     def define_Sr(W: float, r: float, n: float) -> float:
+        """Функция определения степени влажности
+
+            :argument W: влажность, %
+            :argument r: плотность грунта, г/см3
+            :argument n: пористость
+            :return степень влажности
+        """
         return np.round((W * r) / (n * (1 + W)), 2)
 
     @staticmethod
-    def float_df(x):
+    def float_df(x) -> Union[float, None]:
+        """Функия преобразования ячейки dataframe в значение
+
+            :argument x: значение яцейки
+            :return float или None
+        """
         return None if str(x) in ["nan", "NaT"] else x
 
     @staticmethod
