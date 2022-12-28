@@ -290,7 +290,7 @@ class PhysicalProperties:
         """
         if self.r:
             self.rd_modified = PhysicalProperties.define_rd(self.r_modified, self.W_modified)
-            self.Sr_modified = PhysicalProperties.define_Sr(self.W_modified, self.r_modified,
+            self.Sr_modified = PhysicalProperties.define_Sr(self.W_modified, self.rd_modified,
                                                             self.n_modified)
             self.e_modified = PhysicalProperties.define_e(self.rs_modified, self.rd_modified)
             self.n_modified = PhysicalProperties.define_n(self.e_modified)
@@ -527,15 +527,15 @@ class PhysicalProperties:
         return np.round((W - Wp) / (Wl - Wp), 2)
 
     @staticmethod
-    def define_Sr(W: float, r: float, n: float) -> float:
+    def define_Sr(W: float, rd: float, n: float) -> float:
         """Функция определения степени влажности
 
             :argument W: влажность, %
-            :argument r: плотность грунта, г/см3
+            :argument rd: плотность сухого грунта, г/см3
             :argument n: пористость
             :return степень влажности
         """
-        return np.round((W * r) / (n * (1 + W)), 2)
+        return np.round(W * rd / n, 2)
 
     @staticmethod
     def float_df(x) -> Union[float, None]:
