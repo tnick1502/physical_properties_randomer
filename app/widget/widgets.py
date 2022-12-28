@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem, QTableWidget, QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,\
-    QLineEdit, QPushButton, QLabel, QFileDialog, QMessageBox, QCheckBox, QComboBox
+    QLineEdit, QPushButton, QLabel, QFileDialog, QMessageBox, QCheckBox, QComboBox, QDialog, QTextEdit
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import QtGui
 import json
@@ -48,7 +48,7 @@ class TablePhysicalProperties(QTableWidget):
         while (self.rowCount() > 0):
             self.removeRow(0)
 
-        self.setRowCount(31)
+        self.setRowCount(0)
         self.setColumnCount(len(self.keys) + 1)
         self.setHorizontalHeaderLabels(["Лаб. номер", "Наименование"] + [key.replace("granulometric_", "") for key in self.keys if key != "type_ground"])
 
@@ -156,14 +156,15 @@ class OpenWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.create_UI()
-        self.setFixedHeight(80)
+        self.setFixedHeight(120)
+        self.setFixedWidth(450)
 
     def create_UI(self):
 
         self.savebox_layout = QVBoxLayout()
 
         self.path_box = QGroupBox("Параметры директории")
-        self.path_box_layout = QHBoxLayout()
+        self.path_box_layout = QVBoxLayout()
         self.path_box.setLayout(self.path_box_layout)
         self.directory_text = QLineEdit()
         self.directory_text.setDisabled(True)
@@ -571,5 +572,33 @@ class Params(QWidget):
                     QMessageBox.about(self, "Сообщение", "Успешно сохранено")
         except Exception as err:
             QMessageBox.critical(self, "Ошибка", f"{str(err)}", QMessageBox.Ok)
+
+class Info(QDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._UI()
+
+    def setText(self, info: str):
+        self.textbox.setText(info)
+
+    def _UI(self):
+        self.setWindowTitle("Инструкция")
+        self.setFixedWidth(500)
+        self.setFixedHeight(600)
+        self.layout = QVBoxLayout()
+        self.layout_buttons = QHBoxLayout()
+        self.setLayout(self.layout)
+        self.textbox = QTextEdit()
+        #self.textbox.setDisabled(True)
+
+        self.ok_button = QPushButton("Ok")
+        self.ok_button.clicked.connect(lambda: self.close())
+
+        self.layout_buttons.addStretch(-1)
+        self.layout_buttons.addWidget(self.ok_button)
+
+        self.layout.addWidget(self.textbox)
+        self.layout.addLayout(self.layout_buttons)
+
 
 
