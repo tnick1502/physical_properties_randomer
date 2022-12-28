@@ -53,7 +53,7 @@ class DataTypeValidation:
                 try:
                     instance.__dict__[self.attr] = self.data_type(value)
                 except:
-                    raise ValueError(f"{value} typy must be in {str(self.data_types)}, but it is {str(type(value))}")
+                    raise ValueError(f"value of '{self.attr}' is '{value}' ({str(type(value))}), it's type must be {str(self.data_type)}")
 
     def __get__(self, instance, owner):
         if instance is None:
