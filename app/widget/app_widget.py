@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPus
 
 from widgets import TablePhysicalProperties, OpenWidget, Params, ChooseWidget, Info
 
-from model import statment
+from app.model import statment
 
 info = f'''Крутяк {__version__}
 

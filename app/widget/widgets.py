@@ -5,9 +5,9 @@ from PyQt5 import QtGui
 import json
 import os
 
-from model import statment
-from model.statment_model import RandomType
-from model.properties_params import GroundTypes
+from app.model import statment
+from app.model.statment_model import RandomType
+from app.model.properties_params import GroundTypes
 
 PARAMS_PATH = "Z:/Digitrock/randomerParams.json"
 

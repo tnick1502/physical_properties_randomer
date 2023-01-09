@@ -3,8 +3,8 @@ import xlrd
 from xlutils.copy import copy
 import os
 
-from model.property_model import PhysicalProperties, RandomType
-from model.properties_params import PhysicalPropertyParams
+from app.model.property_model import PhysicalProperties, RandomType
+from app.model.properties_params import PhysicalPropertyParams
 
 random_params = {
     "rs": {

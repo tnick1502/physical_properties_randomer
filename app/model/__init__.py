@@ -1,2 +1,2 @@
-from model.statment_model import Statment
+from app.model.statment_model import Statment
 statment = Statment()

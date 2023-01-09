@@ -22,7 +22,7 @@ from enum import Enum
 from decimal import Decimal
 from typing import Dict, Union
 
-from model.properties_params import PhysicalPropertyParams
+from app.model.properties_params import PhysicalPropertyParams
 
 class RandomType(Enum):
     PERCENT = "PERCENT"
@@ -147,7 +147,7 @@ class PhysicalProperties:
                 data_frame.iat[number, PhysicalPropertyParams[attr_name][1]])
                     )
         self.sample_number = number
-        self.type_ground = PhysicalProperties.define_type_ground(self.granDict(), self.Ir, self.Ip)
+        self.type_ground = PhysicalProperties.define_type_ground(self._granDict(), self.Ir, self.Ip)
 
         for key in PhysicalProperties.__dict__:
             if "modified" in key:
@@ -188,11 +188,11 @@ class PhysicalProperties:
 
             while done:
                 if param == "granulometric":
-                    self.randomGran(granKeys, (random_params[param]["value"]) / decrease_parameter)
+                    self._randomGran(granKeys, (random_params[param]["value"]) / decrease_parameter)
                 elif param == "granulometric_areometer":
-                    self.randomGran(granKeysAreometer, random_params[param]["value"] / decrease_parameter)
+                    self._randomGran(granKeysAreometer, random_params[param]["value"] / decrease_parameter)
                 else:
-                    self.randomParam(
+                    self._randomParam(
                         param_name=param,
                         param_type=random_params[param]["type"],
                         param_value=random_params[param]["value"] / decrease_parameter if not between else
@@ -200,7 +200,7 @@ class PhysicalProperties:
                     )
                     if self.Wp and self.Wl:
                         while self.Wp_modified == self.Wl_modified:
-                            self.randomParam(
+                            self._randomParam(
                                 param_name=param,
                                 param_type=random_params[param]["type"],
                                 param_value=random_params[param]["value"] / decrease_parameter if not between else
@@ -208,10 +208,10 @@ class PhysicalProperties:
                             )
 
                     if param not in ["rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet"]:
-                        self.reCalculateProperties()
+                        self._reCalculateProperties()
 
                 self.type_ground_modified = PhysicalProperties.define_type_ground(
-                    self.granDictModified(), self.Ir_modified, self.Ip_modified)
+                    self._granDictModified(), self.Ir_modified, self.Ip_modified)
 
                 if self.type_ground == self.type_ground_modified and (
                         (self.e - 0.05 < self.e_modified < self.e + 0.05) if self.e else True
@@ -232,7 +232,7 @@ class PhysicalProperties:
                     return False
         return True
 
-    def randomParam(self, param_name: str, param_type: str, param_value: float) -> None:
+    def _randomParam(self, param_name: str, param_type: str, param_value: float) -> None:
         """Получение значений рандомного параметра для заданных значений
 
             :argument param_name: имя параметра
@@ -257,7 +257,7 @@ class PhysicalProperties:
 
             setattr(self, f'{param_name}_modified', np.round(random_value, accuracy))
 
-    def granDict(self) -> dict:
+    def _granDict(self) -> dict:
         """Получение словаря с грансоставом оригинальных значний
 
             :return словарь со значениями грансостава по ключам
@@ -267,7 +267,7 @@ class PhysicalProperties:
             data_gran[key] = getattr(self, f"granulometric_{key}")
         return data_gran
 
-    def granDictModified(self) -> dict:
+    def _granDictModified(self) -> dict:
         """Получение словаря с грансоставом модифицированных значний
 
             :return словарь со значениями грансостава по ключам
@@ -277,7 +277,7 @@ class PhysicalProperties:
             data_gran[key] = getattr(self, f"granulometric_{key}_modified")
         return data_gran
 
-    def reCalculateProperties(self) -> None:
+    def _reCalculateProperties(self) -> None:
         """Пересчет свойств грунтов при изменении ключевых параметров
 
         Изменяемые параметры:
@@ -300,7 +300,7 @@ class PhysicalProperties:
             self.Il_modified = PhysicalProperties.define_Il(self.W_modified, self.Wl_modified,
                                                             self.Wp_modified)
 
-    def randomGran(self, keys, percent) -> None:
+    def _randomGran(self, keys, percent) -> None:
         """Наложение рандома на грансостав
 
         Функция накладывает рандом на гран состав, при этом считая общий баланс грансостава (должно быть 100%).
@@ -315,7 +315,7 @@ class PhysicalProperties:
         right_zero_key = None
         change = False
 
-        balance = self.calculateGranBalance()
+        balance = self._calculateGranBalance()
         if balance == 100.:
             return
 
@@ -332,7 +332,7 @@ class PhysicalProperties:
                             right_zero_key = key
                         else:
                             left_zero_key = key
-                balance = float('{:.1f}'.format(self.calculateGranBalance()))
+                balance = float('{:.1f}'.format(self._calculateGranBalance()))
 
             zero_keys = [key for key in [left_zero_key, right_zero_key] if key]
 
@@ -341,11 +341,11 @@ class PhysicalProperties:
             else:
                 key = np.random.choice(keys)
                 setattr(self, key, getattr(self, key) + balance)
-            balance = float('{:.1f}'.format(self.calculateGranBalance()))
+            balance = float('{:.1f}'.format(self._calculateGranBalance()))
             if abs(balance) <= 0.01:
                 break
 
-    def calculateGranBalance(self) -> float:
+    def _calculateGranBalance(self) -> float:
         """Расчет остатка процентов по грансоставу
 
         Возвращает 100, если грансостав не задан
