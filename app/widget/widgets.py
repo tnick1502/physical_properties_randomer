@@ -459,12 +459,12 @@ class Params(QWidget):
     def _set_combo(self, key, value):
         if value == 2:
             min_text = getattr(self, f'text_min_{key}')
-            min_text.setFixedWidth(50)
+            min_text.setFixedWidth(52)
             max_text = getattr(self, f'text_max_{key}')
             max_text.show()
         else:
             min_text = getattr(self, f'text_min_{key}')
-            min_text.setFixedWidth(106.5)
+            min_text.setFixedWidth(108)
             max_text = getattr(self, f'text_max_{key}')
             max_text.hide()
 
