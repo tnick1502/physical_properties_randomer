@@ -77,8 +77,8 @@ class PhysicalProperties:
     rd_max = DataTypeValidation(float)
     Kf_min = DataTypeValidation(float)
     Kf_max = DataTypeValidation(float)
-    slope_angle_dry = DataTypeValidation(float)
-    slope_angle_wet = DataTypeValidation(float)
+    slope_angle_dry = DataTypeValidation(int)
+    slope_angle_wet = DataTypeValidation(int)
     granulometric_10 = DataTypeValidation(float)
     granulometric_5 = DataTypeValidation(float)
     granulometric_2 = DataTypeValidation(float)
@@ -110,8 +110,8 @@ class PhysicalProperties:
     rd_max_modified = DataTypeValidation(float)
     Kf_min_modified = DataTypeValidation(float)
     Kf_max_modified = DataTypeValidation(float)
-    slope_angle_dry_modified = DataTypeValidation(float)
-    slope_angle_wet_modified = DataTypeValidation(float)
+    slope_angle_dry_modified = DataTypeValidation(int)
+    slope_angle_wet_modified = DataTypeValidation(int)
     granulometric_10_modified = DataTypeValidation(float)
     granulometric_5_modified = DataTypeValidation(float)
     granulometric_2_modified = DataTypeValidation(float)
@@ -340,7 +340,7 @@ class PhysicalProperties:
                 setattr(self, np.random.choice(zero_keys), balance)
             else:
                 key = np.random.choice(keys)
-                setattr(self, key, getattr(self, key) + balance)
+                setattr(self, key, float('{:.1f}'.format(np.round(getattr(self, key) + balance, 1))))
             balance = float('{:.1f}'.format(self._calculateGranBalance()))
             if abs(balance) <= 0.01:
                 break
