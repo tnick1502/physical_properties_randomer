@@ -61,6 +61,8 @@ class DataTypeValidation:
         return instance.__dict__.get(self.attr, None)
 
 class PhysicalProperties:
+    borehole = DataTypeValidation(str)
+    depth = DataTypeValidation(int)
     rs = DataTypeValidation(float)
     r = DataTypeValidation(float)
     rd = DataTypeValidation(float)
@@ -125,12 +127,7 @@ class PhysicalProperties:
     granulometric_0000_modified = DataTypeValidation(float)
     type_ground_modified = DataTypeValidation(int)
 
-    def __init__(self, handler=None):
-        if not handler:
-            self.handler = lambda: None
-        else:
-            self.handler = handler
-
+    def __init__(self):
         for key in PhysicalProperties.__dict__:
             if isinstance(getattr(PhysicalProperties, key), DataTypeValidation):
                 object.__setattr__(self, key, None)
@@ -369,7 +366,7 @@ class PhysicalProperties:
         return {
             "origin_data": {
                 attr_name: self.__dict__[attr_name] for attr_name in self.__dict__
-                if "modified" not in attr_name and "headler" not in attr_name
+                if "modified" not in attr_name
             },
             "modified_data": {
                 attr_name[:-9]: self.__dict__[attr_name] for attr_name in self.__dict__ if "modified" in attr_name}
@@ -384,11 +381,6 @@ class PhysicalProperties:
     Модифицированные данные:
         {modified_data}
         """
-
-    def __setattr__(self, key, value):
-        if "modified" in key:
-            self.handler()
-        object.__setattr__(self, key, value)
 
     @staticmethod
     def define_type_ground(data_gran: dict, Ir: float, Ip: float) -> int:

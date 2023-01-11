@@ -101,7 +101,6 @@ class App(QMainWindow):
         except Exception as err:
             QMessageBox.critical(self, "Ошибка", f"{str(err)}", QMessageBox.Ok)
 
-
     def save(self):
         try:
             statment.saveExcel()

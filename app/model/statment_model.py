@@ -95,6 +95,8 @@ class Statment:
         if not all([os.path.exists(path), (path.endswith('.xls') or path.endswith('.xlss'))]):
             raise Exception("Wrong file excel")
 
+        self.data = {}
+
         self.excel_path = path
 
         df = pd.read_excel(self.excel_path, usecols="A:IV", skiprows=[0, 1, 3, 4, 5])
@@ -197,13 +199,7 @@ class Statment:
 if __name__ == "__main__":
     s = Statment()
     #s.setExcelFile('/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls')
-    #s.setExcelFile('C:/Users/Пользователь/Desktop/test/test.xls')
+    s.setExcelFile('C:/Users/Пользователь/Desktop/test/test.xls')
     #s.setRandom()
-    #print(s.getData())
+    print(s.getData())
     excel_path = '/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls'
-    dir, file_name = os.path.split(excel_path)
-    _, file_extension = os.path.splitext(excel_path)
-
-    path = os.path.normpath(os.path.join(dir, f'{file_name.replace(file_extension, "")} ИЗМЕНЕННЫЙ{file_extension}'))
-
-    print(path)

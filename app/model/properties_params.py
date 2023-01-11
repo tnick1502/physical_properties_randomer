@@ -1,4 +1,6 @@
 PhysicalPropertyParams = {
+    "borehole": ['B', 1],
+    "depth": ['C', 2],
     "rs": ['P', 15],
     "r": ['Q', 16],
     "rd": ['R', 17],

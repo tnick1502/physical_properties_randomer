@@ -26,7 +26,8 @@ def write_json(data: dict) -> None:
 class TablePhysicalProperties(QTableWidget):
     """Класс отрисовывает таблицу физических свойств"""
     keys = [
-        "type_ground", "rs", "r", "rd", "n", "e", "W", "Sr",
+        "type_ground",
+        "rs", "r", "rd", "n", "e", "W", "Sr",
         "Wl", "Wp", "Ip", "Il", "Ir",
         "rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet",
         "granulometric_10", "granulometric_5", "granulometric_2",
@@ -49,13 +50,12 @@ class TablePhysicalProperties(QTableWidget):
             self.removeRow(0)
 
         self.setRowCount(0)
-        self.setColumnCount(len(self.keys) + 1)
-        self.setHorizontalHeaderLabels(["Лаб. номер", "Наименование"] + [key.replace("granulometric_", "") for key in self.keys if key != "type_ground"])
+        self.setColumnCount(len(self.keys) + 3)
+        self.setHorizontalHeaderLabels(["Лаб. номер", "Скважина", "Глубина", "Наименование"] + [key.replace("granulometric_", "") for key in self.keys if key != "type_ground"])
 
         self.verticalHeader().setMinimumSectionSize(30)
 
         self.horizontalHeader().setMinimumSectionSize(30)
-        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Fixed)
 
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
@@ -90,49 +90,59 @@ class TablePhysicalProperties(QTableWidget):
 
     def set_data(self, active_keys=None, problem_keys=[]):
         """Функция для получения данных"""
-        replaceNone = lambda x: x if x != "None" else "-"
+        try:
+            replaceNone = lambda x: x if x != "None" else "-"
 
-        data = statment.getData()
+            data = statment.getData()
 
-        self._clear_table()
+            self._clear_table()
 
-        self.active_laboratory_numbers = active_keys if active_keys is not None else list(data.keys())
+            self.active_laboratory_numbers = active_keys if active_keys is not None else list(data.keys())
 
-        self.setRowCount(len(data) * 2)
+            self.setRowCount(len(data) * 2)
 
-        for i, lab in enumerate(data):
-            item = QTableWidgetItem(lab)
-            item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-            if lab in self.active_laboratory_numbers:
-                item.setCheckState(Qt.Checked)
-            else:
-                item.setCheckState(Qt.Unchecked)
-            item.setTextAlignment(Qt.AlignCenter)
-            self.setItem(2 * i, 0, item)
-
-            item = QTableWidgetItem(replaceNone(lab))
-            item.setTextAlignment(Qt.AlignCenter)
-            self.setItem(2 * i, 1, item)
-
-            for g, value in enumerate([str(data[lab]["origin_data"][key]) for key in self.keys]):
-                if g == 0:
-                    value = GroundTypes[int(value)]
-                item = QTableWidgetItem(replaceNone(value))
+            for i, lab in enumerate(data):
+                item = QTableWidgetItem(lab)
+                item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                if lab in self.active_laboratory_numbers:
+                    item.setCheckState(Qt.Checked)
+                else:
+                    item.setCheckState(Qt.Unchecked)
                 item.setTextAlignment(Qt.AlignCenter)
-                self.setItem(2 * i, g + 1, item)
-            for g, value in enumerate([str(data[lab]["modified_data"][key]) for key in self.keys]):
-                if g == 0:
-                    value = GroundTypes[int(value)]
-                item = QTableWidgetItem(replaceNone(value))
-                item.setTextAlignment(Qt.AlignCenter)
-                self.setItem(2 * i + 1, g + 1, item)
+                self.setItem(2 * i, 0, item)
 
-        for i, lab in enumerate(data):
-            if lab in problem_keys:
-                self.set_row_color(2 * i, (221, 65, 36))
-            else:
-                self.set_row_color(2 * i, (231, 210, 186))
-            self.setSpan(2 * i, 0, 2, 1)
+                item_borehole = QTableWidgetItem(replaceNone(data[lab]["origin_data"]["borehole"]))
+                item_borehole.setTextAlignment(Qt.AlignCenter)
+                self.setItem(2 * i, 1, item_borehole)
+
+                item_depth = QTableWidgetItem(str(replaceNone(data[lab]["origin_data"]["depth"])))
+                item_depth.setTextAlignment(Qt.AlignCenter)
+                self.setItem(2 * i, 2, item_depth)
+
+                for g, value in enumerate([str(data[lab]["origin_data"][key]) for key in self.keys]):
+                    if g == 0:
+                        value = GroundTypes[int(value)]
+                    item = QTableWidgetItem(replaceNone(value))
+                    item.setTextAlignment(Qt.AlignCenter)
+                    self.setItem(2 * i, g + 3, item)
+
+                for g, value in enumerate([str(data[lab]["modified_data"][key]) for key in self.keys]):
+                    if g == 0:
+                        value = GroundTypes[int(value)]
+                    item = QTableWidgetItem(replaceNone(value))
+                    item.setTextAlignment(Qt.AlignCenter)
+                    self.setItem(2 * i + 1, g + 3, item)
+
+            for i, lab in enumerate(data):
+                if lab in problem_keys:
+                    self.set_row_color(2 * i, (221, 65, 36))
+                else:
+                    self.set_row_color(2 * i, (231, 210, 186))
+                self.setSpan(2 * i, 0, 2, 1)
+                self.setSpan(2 * i, 1, 2, 1)
+                self.setSpan(2 * i, 2, 2, 1)
+        except Exception as err:
+            print(err)
 
     def handleItemClicked(self, item):
        if item.column() == 0:
