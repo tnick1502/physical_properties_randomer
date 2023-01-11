@@ -215,7 +215,7 @@ class PhysicalProperties:
 
                 if self.type_ground == self.type_ground_modified and (
                         (self.e - 0.05 < self.e_modified < self.e + 0.05) if self.e else True
-                ):
+                ) and self.Sr_modified <= 1:
                     done = False
                 else:
                     cycles_count -= 1
