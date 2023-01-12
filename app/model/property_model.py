@@ -333,11 +333,41 @@ class PhysicalProperties:
 
             zero_keys = [key for key in [left_zero_key, right_zero_key] if key]
 
-            if len(zero_keys):
-                setattr(self, np.random.choice(zero_keys), balance)
+            keys_for_set_disbalance = None
+
+            if left_zero_key and right_zero_key:
+                keys_for_set_disbalance = keys[keys.index(left_zero_key) + 1: keys.index(right_zero_key)]
+                if np.round(np.random.uniform(0, 1)):
+                    left_zero_key = None
+                else:
+                    right_zero_key = None
+
+            if left_zero_key or right_zero_key:
+                if keys_for_set_disbalance is None:
+                    keys_for_set_disbalance = keys[keys.index(left_zero_key) + 1:] if left_zero_key else keys[: keys.index(right_zero_key)]
+
+                limit = min(
+                    [
+                        balance,
+                        getattr(self, keys[keys.index(left_zero_key) + 1]) if left_zero_key else getattr(self, keys[
+                            keys.index(right_zero_key)]),
+                        0.5
+                    ]
+                )
+                val = np.round(np.random.uniform(0, limit), 1)
+                setattr(self,
+                        left_zero_key if left_zero_key else right_zero_key,
+                        float('{:.1f}'.format(val)) if val else None)
+
+                balance = float('{:.1f}'.format(self._calculateGranBalance()))
+
+                key = np.random.choice(keys_for_set_disbalance)
+                setattr(self, key, float('{:.1f}'.format(np.round(getattr(self, key) + balance, 1))))
+
             else:
                 key = np.random.choice(keys)
                 setattr(self, key, float('{:.1f}'.format(np.round(getattr(self, key) + balance, 1))))
+
             balance = float('{:.1f}'.format(self._calculateGranBalance()))
             if abs(balance) <= 0.01:
                 break
