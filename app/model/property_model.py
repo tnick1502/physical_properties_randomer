@@ -23,6 +23,7 @@ from decimal import Decimal
 from typing import Dict, Union
 
 from app.model.properties_params import PhysicalPropertyParams
+from app.model.ground_type_identifier import define_type_ground
 
 class RandomType(Enum):
     PERCENT = "PERCENT"
@@ -144,7 +145,7 @@ class PhysicalProperties:
                 data_frame.iat[number, PhysicalPropertyParams[attr_name][1]])
                     )
         self.sample_number = number
-        self.type_ground = PhysicalProperties.define_type_ground(self._granDict(), self.Ir, self.Ip)
+        self.type_ground = define_type_ground(self._granDict(), self.Ir, self.Ip, self.e, self.Il)
 
         for key in PhysicalProperties.__dict__:
             if "modified" in key:
@@ -207,8 +208,8 @@ class PhysicalProperties:
                     if param not in ["rd_min", "rd_max", "Kf_min", "Kf_max", "slope_angle_dry", "slope_angle_wet"]:
                         self._reCalculateProperties()
 
-                self.type_ground_modified = PhysicalProperties.define_type_ground(
-                    self._granDictModified(), self.Ir_modified, self.Ip_modified)
+                self.type_ground_modified = define_type_ground(
+                    self._granDictModified(), self.Ir_modified, self.Ip_modified, self.e_modified, self.Il_modified)
 
                 if self.type_ground == self.type_ground_modified and (
                         (self.e - 0.05 < self.e_modified < self.e + 0.05) if self.e else True
@@ -331,8 +332,6 @@ class PhysicalProperties:
                             left_zero_key = key
                 balance = float('{:.1f}'.format(self._calculateGranBalance()))
 
-            zero_keys = [key for key in [left_zero_key, right_zero_key] if key]
-
             keys_for_set_disbalance = None
 
             if left_zero_key and right_zero_key:
@@ -354,13 +353,13 @@ class PhysicalProperties:
                         0.5
                     ]
                 )
+
                 val = np.round(np.random.uniform(0, limit), 1)
                 setattr(self,
                         left_zero_key if left_zero_key else right_zero_key,
                         float('{:.1f}'.format(val)) if val else None)
 
                 balance = float('{:.1f}'.format(self._calculateGranBalance()))
-
                 key = np.random.choice(keys_for_set_disbalance)
                 setattr(self, key, float('{:.1f}'.format(np.round(getattr(self, key) + balance, 1))))
 
@@ -369,6 +368,7 @@ class PhysicalProperties:
                 setattr(self, key, float('{:.1f}'.format(np.round(getattr(self, key) + balance, 1))))
 
             balance = float('{:.1f}'.format(self._calculateGranBalance()))
+
             if abs(balance) <= 0.01:
                 break
 
@@ -411,92 +411,6 @@ class PhysicalProperties:
     Модифицированные данные:
         {modified_data}
         """
-
-    @staticmethod
-    def define_type_ground(data_gran: dict, Ir: float, Ip: float) -> int:
-        """Функция определения типа грунта через грансостав
-
-            :argument data_gran: словарь грансостава, полуенный из granDict или granDictModified
-            :argument Ir: содержание органики
-            :argument Ip: число пластичности
-            :return тип грунта
-        """
-        none_to_zero = lambda x: 0 if not x else x
-
-        gran_struct = ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']  # гран состав
-        accumulate_gran = [none_to_zero(data_gran[gran_struct[0]])]  # Накоплено процентное содержание
-        for i in range(10):
-            accumulate_gran.append(accumulate_gran[i] + none_to_zero(data_gran[gran_struct[i + 1]]))
-
-        accumulate_gran_clay = 0
-        for i in gran_struct[2:8]:
-            accumulate_gran_clay += none_to_zero(data_gran[i])
-
-        accumulate_gran_big = 0
-        for i in gran_struct[:3]:
-            accumulate_gran_big += none_to_zero(data_gran[i])
-
-        if none_to_zero(Ir) >= 50:  # содержание органического вещества Iom=hg10=Ir
-            type_ground = 9  # Торф
-
-        elif none_to_zero(Ip) < 1:  # число пластичности
-            if accumulate_gran[2] > 25:
-                type_ground = 1  # Песок гравелистый
-            elif accumulate_gran[4] > 50:
-                type_ground = 2  # Песок крупный
-            elif accumulate_gran[5] > 50:
-                type_ground = 3  # Песок средней крупности
-            elif accumulate_gran[6] >= 75:
-                type_ground = 4  # Песок мелкий
-            else:
-                type_ground = 5  # Песок пылеватый
-
-        elif (Ip >= 1) and (15 <= accumulate_gran_big <= 25):
-            type_ground = 15  # Супесь, суглинок, глина с галькой (щебнем), с гравием (дресвой) или ракушкой
-
-        elif (Ip >= 1) and (25 < accumulate_gran_big <= 50):
-            type_ground = 16  # Супесь, суглинок, глина галечниковые (щебенистые), гравелистые (дресвяные) или ракушечные
-
-        elif 1 <= Ip <= 7:
-            if accumulate_gran_clay == 0:
-                type_ground = 17  # Супесь
-            else:
-                if accumulate_gran_clay >= 50:
-                    type_ground = 6  # Супесь песчанистая
-                else:
-                    type_ground = 7  # Супесь пылеватая
-
-        elif 7 < Ip <= 12:
-            if accumulate_gran_clay == 0:
-                type_ground = 18  # Суглинок
-            else:
-                if accumulate_gran_clay >= 40:
-                    type_ground = 8  # Суглинок легкий песчанистый
-                else:
-                    type_ground = 9  # Суглинок легкий пылеватый
-
-        elif 12 < Ip <= 17:
-            if accumulate_gran_clay == 0:
-                type_ground = 18  # Суглинок
-            else:
-                if accumulate_gran_clay >= 40:
-                    type_ground = 10  # Суглинок тяжелый песчанистый
-                else:
-                    type_ground = 11  # Суглинок тяжелый пылеватый
-
-        elif 17 < Ip <= 27:
-            if accumulate_gran_clay == 0:
-                type_ground = 19  # Глина
-            else:
-                if accumulate_gran_clay >= 40:
-                    type_ground = 12  # Глина легкая песчанистая
-                else:
-                    type_ground = 13  # Глина легкая пылеватая
-
-        elif Ip > 27:
-            type_ground = 14  # Глина тяжелая
-
-        return type_ground
 
     @staticmethod
     def define_rd(r: float, W: float) -> float:
