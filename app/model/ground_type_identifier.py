@@ -16,6 +16,14 @@ def define_type_ground(data_gran: dict, Ir: float, Ip: float, e: float, Il: floa
         type_ground_B = define_clay_liquid(type_ground_A, Il)
     else:
         type_ground_B = "-"
+
+    type_ground_С = "-"
+
+    if type_ground_A in ["D", "E", "F", "G", "H", "I", "J", "R", "K", "L", "M", "N", "S", "O", "P", "Q", "T"]:
+        type_ground_D = define_organic(type_ground_A, Ir)
+    else:
+        type_ground_D = "-"
+
     '''accumulate_gran_big = 0
     for i in gran_struct[:3]:
         accumulate_gran_big += none_to_zero(data_gran[i])
@@ -26,7 +34,7 @@ def define_type_ground(data_gran: dict, Ir: float, Ip: float, e: float, Il: floa
     elif (Ip >= 1) and (25 < accumulate_gran_big <= 50):
         type_ground = 16  # Супесь, суглинок, глина галечниковые (щебенистые), гравелистые (дресвяные) или ракушечные'''
 
-    return type_ground_A + type_ground_B
+    return type_ground_A + type_ground_B + type_ground_С + type_ground_D
 
 def none_to_zero(x):
     return x if x else 0
@@ -181,12 +189,53 @@ def define_clay_liquid(type: str, Il: float) -> str:
 
     raise ValueError("Can't define clay liquid ground type")
 
+def define_organic(type: str, Ir: float) -> str:
+    """Функция определения типа глинистых гругтов по показателю текучести
+
+        :argument type: тип песка
+        :argument Ir: Содержание органики
+        :return тип грунта
+    """
+    if Ir is None:
+        return "-"
+    else:
+        Ir /= 100
+
+    if type in ["D", "E", "F", "G", "H"]:
+        if 0.03 < Ir <= 0.10:
+            return "A"  # с примесью органического вещества
+        elif 0.10 < Ir <= 0.25:
+            return "B"  # с низким содержанием органического вещества
+        elif 0.25 < Ir <= 0.40:
+            return "C"  # со средним содержанием органического вещества
+        elif 0.40 < Ir < 0.50:
+            return "D"  # с высоким содержанием органического вещества
+        else:
+            return "-"
+
+    elif type in ["I", "J", "R", "K", "L", "M", "N", "S", "O", "P", "Q", "T"]:
+        if 0.05 < Ir <= 0.10:
+            return "A"  # с примесью органического вещества
+        elif 0.10 < Ir <= 0.25:
+            return "B"  # с низким содержанием органического вещества
+        elif 0.25 < Ir <= 0.40:
+            return "C"  # со средним содержанием органического вещества
+        elif 0.40 < Ir < 0.50:
+            return "D"  # с высоким содержанием органического вещества
+        else:
+            return "-"
+
+    raise ValueError("Can't define organic ground type")
+
+
 def convert_type_to_name(type_ground: str):
-    print(type_ground)
-    A, B = list(type_ground)
-    print(A, B)
-    name_B = GroundTypes_B.get(B, None)
-    return f'{GroundTypes[A]} {name_B if name_B else ""}'
+    A, B, C, D = list(type_ground)
+    A = GroundTypes[A]
+    B = " " + GroundTypes_B.get(B, None) if GroundTypes_B.get(B, None) else ""
+    C = " " + GroundTypes_C.get(C, None) if GroundTypes_C.get(C, None) else ""
+    D = " " + GroundTypes_D.get(D, None) if GroundTypes_D.get(D, None) else ""
+
+    return A + B + C + D
 
 GroundTypes = {
     "A": "Щебень",
@@ -231,6 +280,16 @@ GroundTypes_B = {
     "P": "мягкопластичная",
     "Q": "текучепластичная",
     "R": "текучая",
+}
+
+GroundTypes_C = {
+}
+
+GroundTypes_D = {
+    "A": "с примесью органического вещества",
+    "B": "с низким содержанием органического вещества",
+    "C": "со средним содержанием органического вещества",
+    "D": " с высоким содержанием органического вещества",
 }
 
 
