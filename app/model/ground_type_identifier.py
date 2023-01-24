@@ -17,7 +17,10 @@ def define_type_ground(data_gran: dict, Ir: float, Ip: float, e: float, Il: floa
     else:
         type_ground_B = "-"
 
-    type_ground_С = "-"
+    if type_ground_A in ["A", "B", "C", "I", "J", "R", "O", "P", "Q", "T", "K", "L", "M", "N", "S"]:
+        type_ground_С = define_mixed(type_ground_A, data_gran, Ip)
+    else:
+        type_ground_С = "-"
 
     if type_ground_A in ["D", "E", "F", "G", "H", "I", "J", "R", "K", "L", "M", "N", "S", "O", "P", "Q", "T"]:
         type_ground_D = define_organic(type_ground_A, Ir)
@@ -227,6 +230,56 @@ def define_organic(type: str, Ir: float) -> str:
 
     raise ValueError("Can't define organic ground type")
 
+def define_mixed(type: str, data_gran: dict, Ip: float) -> str:
+    """Функция определения типа глинистых гругтов по показателю текучести
+
+        :argument data_gran: словарь грансостава, полуенный из granDict или granDictModified
+        :argument type: тип песка
+        :argument Ip: число пластичности
+        :return тип грунта
+    """
+    if Ip is None:
+       Ip = 0
+
+    if type in ["I", "J", "R", "O", "P", "Q", "T"]:
+        if 15 <= accumulate_gran(data_gran, ['10', '5', '2']) <= 25:
+            if accumulate_gran(data_gran, ['2']) > accumulate_gran(data_gran, ['5']):
+                return "B"
+            else:
+                return "A"
+        elif 25 < accumulate_gran(data_gran, ['10', '5', '2']) <= 50:
+            if accumulate_gran(data_gran, ['2']) > accumulate_gran(data_gran, ['5']):
+                return "F"
+            else:
+                return "E"
+
+    elif type in ["K", "L", "M", "N", "S"]:
+        if 15 <= accumulate_gran(data_gran, ['10', '5', '2']) <= 25:
+            if accumulate_gran(data_gran, ['2']) > accumulate_gran(data_gran, ['5']):
+                return "B"
+            else:
+                return "A"
+        elif 25 < accumulate_gran(data_gran, ['10', '5', '2']) <= 50:
+            if accumulate_gran(data_gran, ['2']) > accumulate_gran(data_gran, ['5']):
+                return "D"
+            else:
+                return "C"
+
+    if type in ["A", "B", "C"]:
+        if accumulate_gran(data_gran, ['1', '05', '025', '01', "005", "001", "0002", "0000"]) >= 30:
+            if 1 <= Ip <= 7:
+                return "H"  # с супесью
+            elif 7 < Ip <= 17:
+                return "I"  # с суглинком
+            elif Ip > 17:
+                return "J"  # с глиной
+        elif accumulate_gran(data_gran, ['1', '05', '025', '01']) >= 40:
+            return "G"  # с песком
+
+    return "-"
+
+
+    raise ValueError("Can't define organic ground type")
 
 def convert_type_to_name(type_ground: str):
     A, B, C, D = list(type_ground)
@@ -283,13 +336,23 @@ GroundTypes_B = {
 }
 
 GroundTypes_C = {
+    "A": "с щебнем",
+    "B": "с дресвой",
+    "C": "щебенистый",
+    "D": "дресвяный",
+    "E": "щебенистая",
+    "F": "дресвяная",
+    "G": "с песком",
+    "H": "с супесью",
+    "I": "с суглинком",
+    "J": "с глиной",
 }
 
 GroundTypes_D = {
     "A": "с примесью органического вещества",
     "B": "с низким содержанием органического вещества",
     "C": "со средним содержанием органического вещества",
-    "D": " с высоким содержанием органического вещества",
+    "D": "с высоким содержанием органического вещества",
 }
 
 
