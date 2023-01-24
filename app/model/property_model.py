@@ -94,7 +94,7 @@ class PhysicalProperties:
     granulometric_0002 = DataTypeValidation(float)
     granulometric_0000 = DataTypeValidation(float)
     sample_number = DataTypeValidation(int)
-    type_ground = DataTypeValidation(int)
+    type_ground = DataTypeValidation(str)
     ground_name = DataTypeValidation(str)
 
     rs_modified = DataTypeValidation(float)
@@ -126,7 +126,7 @@ class PhysicalProperties:
     granulometric_001_modified = DataTypeValidation(float)
     granulometric_0002_modified = DataTypeValidation(float)
     granulometric_0000_modified = DataTypeValidation(float)
-    type_ground_modified = DataTypeValidation(int)
+    type_ground_modified = DataTypeValidation(str)
 
     def __init__(self):
         for key in PhysicalProperties.__dict__:

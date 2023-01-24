@@ -7,7 +7,7 @@ import os
 
 from app.model import statment
 from app.model.statment_model import RandomType
-from app.model.properties_params import GroundTypes
+from app.model.ground_type_identifier import GroundTypes, convert_type_to_name
 
 PARAMS_PATH = "Z:/Digitrock/randomerParams.json"
 
@@ -121,14 +121,14 @@ class TablePhysicalProperties(QTableWidget):
 
                 for g, value in enumerate([str(data[lab]["origin_data"][key]) for key in self.keys]):
                     if g == 0:
-                        value = GroundTypes[int(value)]
+                        value = data[lab]["origin_data"]["ground_name"]
                     item = QTableWidgetItem(replaceNone(value))
                     item.setTextAlignment(Qt.AlignCenter)
                     self.setItem(2 * i, g + 3, item)
 
                 for g, value in enumerate([str(data[lab]["modified_data"][key]) for key in self.keys]):
                     if g == 0:
-                        value = GroundTypes[int(value)]
+                        value = convert_type_to_name(value)
                     item = QTableWidgetItem(replaceNone(value))
                     item.setTextAlignment(Qt.AlignCenter)
                     self.setItem(2 * i + 1, g + 3, item)
