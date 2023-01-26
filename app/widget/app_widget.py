@@ -88,6 +88,7 @@ class App(QMainWindow):
 
     def addHandlers(self):
         self.open_widget.signal.connect(self.table.set_data)
+        self.open_widget.signal.connect(self.choose.update)
         self.params.signal[dict].connect(self.set_random)
         self.choose.signal[list].connect(self.table.filter)
         self.save_button.clicked.connect(self.save)

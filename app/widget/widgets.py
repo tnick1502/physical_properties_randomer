@@ -204,6 +204,7 @@ class ChooseWidget(QWidget):
 
     def __init__(self):
         super().__init__()
+        self.ground_types_dict = {}
         self.create_UI()
         self.setFixedHeight(120)
 
@@ -227,7 +228,7 @@ class ChooseWidget(QWidget):
 
         self.h2_layout.addWidget(QLabel("Фильтр по типу грунта"))
         self.combobox = QComboBox()
-        self.combobox.addItems(["Не выбрано"] + list(GroundTypes.values()))
+        self.combobox.addItems(["Не выбрано"])
         self.h2_layout.addWidget(self.combobox)
         self.combobox.setFixedHeight(30)
         self.combobox.setFixedWidth(300)
@@ -247,7 +248,19 @@ class ChooseWidget(QWidget):
         if value == 0:
             self.signal.emit(list(statment.data.keys()))
         else:
-            self.signal.emit([key for key in statment.data.keys() if statment.data[key].type_ground == value])
+            self.signal.emit(
+                [
+                    key for key in statment.data.keys()
+                    if statment.data[key].type_ground == self.ground_types_dict[self.combobox.currentText()]
+                 ]
+            )
+
+    def update(self):
+        self.combobox.clear()
+        data = statment.getData()
+        self.ground_types_dict = {
+            convert_type_to_name(key): key for key in [data[lab]["origin_data"]["type_ground"] for lab in data]}
+        self.combobox.addItems(["Не выбрано"] + list(self.ground_types_dict.keys()))
 
 class Params(QWidget):
     signal = pyqtSignal(dict)
