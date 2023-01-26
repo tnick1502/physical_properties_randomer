@@ -211,9 +211,10 @@ class PhysicalProperties:
                 self.type_ground_modified = define_type_ground(
                     self._granDictModified(), self.Ir_modified, self.Ip_modified, self.e_modified, self.Il_modified)
 
-                if self.type_ground == self.type_ground_modified and (
-                        (self.e - 0.05 < self.e_modified < self.e + 0.05) if self.e else True
-                ) and self.Sr_modified <= 1:
+                e_condition = (self.e - 0.05 < self.e_modified < self.e + 0.05) if self.e else True
+                Sr_condition = (self.Sr_modified <= 1) if self.Sr else True
+
+                if self.type_ground == self.type_ground_modified and e_condition and Sr_condition:
                     done = False
                 else:
                     cycles_count -= 1
@@ -315,6 +316,9 @@ class PhysicalProperties:
 
         balance = self._calculateGranBalance()
         if balance == 100.:
+            return
+
+        if not sum([getattr(self, key) for key in keys if getattr(self, key)]):
             return
 
         while True:

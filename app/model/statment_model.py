@@ -199,7 +199,7 @@ class Statment:
 if __name__ == "__main__":
     s = Statment()
     #s.setExcelFile('/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls')
-    s.setExcelFile('C:/Users/Пользователь/Desktop/test/test.xls')
-    #s.setRandom()
+    s.setExcelFile('C:/Users/Пользователь/Desktop/test/09-23 Калининская АЭС - вибро-1.xls')
+    s.setRandom(random_params, ["1-1"])
     print(s.getData())
     excel_path = '/Users/mac1/Desktop/projects/databases/511-21 ул. Красного Маяка, 26- мех-2.xls'
