@@ -104,10 +104,13 @@ class TablePhysicalProperties(QTableWidget):
             for i, lab in enumerate(data):
                 item = QTableWidgetItem(lab)
                 item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                if lab in self.active_laboratory_numbers:
-                    item.setCheckState(Qt.Checked)
-                else:
+                if data[lab]["origin_data"]["type_ground"] == "Z---":
                     item.setCheckState(Qt.Unchecked)
+                else:
+                    if lab in self.active_laboratory_numbers:
+                        item.setCheckState(Qt.Checked)
+                    else:
+                        item.setCheckState(Qt.Unchecked)
                 item.setTextAlignment(Qt.AlignCenter)
                 self.setItem(2 * i, 0, item)
 
@@ -241,7 +244,7 @@ class ChooseWidget(QWidget):
         self.layout.setContentsMargins(5, 5, 5, 5)
 
         self.zero_button.clicked.connect(lambda: self.signal.emit([]))
-        self.all_button.clicked.connect(lambda: self.signal.emit(list(statment.data.keys())))
+        self.all_button.clicked.connect(lambda: self.signal.emit([key for key in list(statment.data.keys()) if statment[key].type_ground != "Z---"]))
         self.combobox.activated.connect(self._combo_changed)
 
     def _combo_changed(self, value):

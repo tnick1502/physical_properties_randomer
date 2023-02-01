@@ -10,6 +10,9 @@ def define_type_ground(data_gran: dict, Ir: float, Ip: float, e: float, Il: floa
     """
     type_ground_A = define_main_type(data_gran, Ir, Ip)
 
+    if type_ground_A == "Z":
+        return "Z---"
+
     if type_ground_A in ["D", "E", "F", "G", "H"]:
         type_ground_B = define_sand_stack(type_ground_A, e)
     elif type_ground_A in ["I", "J", "R", "K", "L", "M", "N", "S", "O", "P", "Q", "T"]:
@@ -26,16 +29,6 @@ def define_type_ground(data_gran: dict, Ir: float, Ip: float, e: float, Il: floa
         type_ground_D = define_organic(type_ground_A, Ir)
     else:
         type_ground_D = "-"
-
-    '''accumulate_gran_big = 0
-    for i in gran_struct[:3]:
-        accumulate_gran_big += none_to_zero(data_gran[i])
-
-    elif (Ip >= 1) and (15 <= accumulate_gran_big <= 25):
-        type_ground = 15  # Супесь, суглинок, глина с галькой (щебнем), с гравием (дресвой) или ракушкой
-
-    elif (Ip >= 1) and (25 < accumulate_gran_big <= 50):
-        type_ground = 16  # Супесь, суглинок, глина галечниковые (щебенистые), гравелистые (дресвяные) или ракушечные'''
 
     return type_ground_A + type_ground_B + type_ground_С + type_ground_D
 
@@ -56,6 +49,11 @@ def define_main_type(data_gran: dict, Ir: float, Ip: float) -> str:
         :argument Ip: число пластичности
         :return тип грунта
     """
+    if accumulate_gran(data_gran,
+                       ['10', '5', '2', '1', '05', '025', '01', '005', '001', '0002', '0000']
+                       ) == 0 and not Ip and not Ir:
+        return "Z"
+
     Ip = none_to_zero(Ip)
     Ir = none_to_zero(Ir)
 
@@ -243,24 +241,24 @@ def define_mixed(type: str, data_gran: dict, Ip: float) -> str:
 
     if type in ["I", "J", "R", "O", "P", "Q", "T"]:
         if 15 <= accumulate_gran(data_gran, ['10', '5', '2']) <= 25:
-            if accumulate_gran(data_gran, ['2']) > accumulate_gran(data_gran, ['5']):
+            if accumulate_gran(data_gran, ['5', '2']) > accumulate_gran(data_gran, ['10']):
                 return "B"
             else:
                 return "A"
         elif 25 < accumulate_gran(data_gran, ['10', '5', '2']) <= 50:
-            if accumulate_gran(data_gran, ['2']) > accumulate_gran(data_gran, ['5']):
+            if accumulate_gran(data_gran, ['5', '2']) > accumulate_gran(data_gran, ['10']):
                 return "F"
             else:
                 return "E"
 
     elif type in ["K", "L", "M", "N", "S"]:
         if 15 <= accumulate_gran(data_gran, ['10', '5', '2']) <= 25:
-            if accumulate_gran(data_gran, ['2']) > accumulate_gran(data_gran, ['5']):
+            if accumulate_gran(data_gran, ['5', '2']) > accumulate_gran(data_gran, ['10']):
                 return "B"
             else:
                 return "A"
         elif 25 < accumulate_gran(data_gran, ['10', '5', '2']) <= 50:
-            if accumulate_gran(data_gran, ['2']) > accumulate_gran(data_gran, ['5']):
+            if accumulate_gran(data_gran, ['5', '2']) > accumulate_gran(data_gran, ['10']):
                 return "D"
             else:
                 return "C"
@@ -312,6 +310,7 @@ GroundTypes = {
     "S": "Суглинок",
     "T": "Глина",
     "U": "Торф",
+    "Z": "Не определяется"
 }
 
 GroundTypes_B = {
