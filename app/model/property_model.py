@@ -289,10 +289,11 @@ class PhysicalProperties:
         """
         if self.r:
             self.rd_modified = PhysicalProperties.define_rd(self.r_modified, self.W_modified)
-            self.Sr_modified = PhysicalProperties.define_Sr(self.W_modified, self.rd_modified,
-                                                            self.n_modified)
-            self.e_modified = PhysicalProperties.define_e(self.rs_modified, self.rd_modified)
-            self.n_modified = PhysicalProperties.define_n(self.e_modified)
+            if self.n_modified:
+                self.Sr_modified = PhysicalProperties.define_Sr(self.W_modified, self.rd_modified,
+                                                                self.n_modified)
+                self.e_modified = PhysicalProperties.define_e(self.rs_modified, self.rd_modified)
+                self.n_modified = PhysicalProperties.define_n(self.e_modified)
 
         if self.Ip and self.Ip:
             self.Ip_modified = PhysicalProperties.define_Ip(self.Wl_modified, self.Wp_modified)

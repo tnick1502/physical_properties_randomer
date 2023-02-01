@@ -68,7 +68,7 @@ def define_main_type(data_gran: dict, Ir: float, Ip: float) -> str:
         return "B"  # Дресва
 
     if 1 <= Ip <= 7:
-        if accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) == 0:
+        if accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) == 0 or accumulate_gran(data_gran, ['001', '0002', '0000']) == 0:
             return "R"  # Супесь
         elif accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) >= 50:
             return "I"  # Супесь песчанистая
@@ -76,7 +76,7 @@ def define_main_type(data_gran: dict, Ir: float, Ip: float) -> str:
             return "J"  # Супесь пылеватая
 
     elif 7 < Ip <= 17:
-        if accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) == 0:
+        if accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) == 0 or accumulate_gran(data_gran, ['001', '0002', '0000']) == 0:
             return "S"  # Суглинок
         elif accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) >= 40 and (7 < Ip <= 12):
             return "K"  # Суглинок легкий песчаныстый
@@ -90,7 +90,7 @@ def define_main_type(data_gran: dict, Ir: float, Ip: float) -> str:
     elif Ip > 17:
         if Ip > 27:
             return "Q"  # Глина тяжелая
-        elif accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) == 0:
+        elif accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) == 0 or accumulate_gran(data_gran, ['001', '0002', '0000']) == 0:
             return "T"  # Глина
         elif accumulate_gran(data_gran, ['2', '1', '05', '025', '01', '005']) >= 40 and (17 < Ip <= 27):
             return "O"  # Глина легкая песчанистая
@@ -291,8 +291,8 @@ def convert_type_to_name(type_ground: str):
     return A + B + C + D
 
 GroundTypes = {
-    "A": "Щебень",
-    "B": "Дресва",
+    "A": "Грунт щебенистый",
+    "B": "Грунт дресвяный",
     "C": "Грунт дресвяно-щебенистый",
     "D": "Песок гравелистый",
     "E": "Песок крупный",
