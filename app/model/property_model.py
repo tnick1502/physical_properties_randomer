@@ -311,10 +311,9 @@ class PhysicalProperties:
             :argument percent: процент ихменения для вариации параметров
             :return None
         """
-        left_zero_key = None
-        right_zero_key = None
-        change = False
+        big_sito = ['granulometric_10_modified', 'granulometric_5_modified', 'granulometric_2_modified']
 
+        # Проверка, задан ли грансостав
         balance = self._calculateGranBalance()
         if balance == 100.:
             return
@@ -322,14 +321,22 @@ class PhysicalProperties:
         if not sum([getattr(self, key) for key in keys if getattr(self, key)]):
             return
 
+        # Добавление рандома на грансостав пока общий баланс не сойдется
         while True:
             balance = -1
+
+            # Добавление рандома на грансостав пока общий дисбалас не станет положительным (чтобы потом вычитать его)
             while balance < 0:
+                change = False
+                left_zero_key = None
+                right_zero_key = None
+
                 for key in keys:
                     value = getattr(self, key[:-9])
                     if value:
                         val = np.round(np.random.uniform(value - (value * percent / 100), value + (value * percent / 100)), 1)
                         setattr(self, key, float('{:.1f}'.format(val)) if (val or val == 0.0) else None)
+                        change = True
                     else:
                         if change:
                             right_zero_key = key
@@ -337,40 +344,54 @@ class PhysicalProperties:
                             left_zero_key = key
                 balance = float('{:.1f}'.format(self._calculateGranBalance()))
 
-            keys_for_set_disbalance = None
+            # Список ключей для раскидывания дисбаланса на них
+            keys_for_set_disbalance = [key for key in keys if getattr(self, key)]
 
-            if left_zero_key and right_zero_key:
-                keys_for_set_disbalance = keys[keys.index(left_zero_key) + 1: keys.index(right_zero_key)]
-                if np.round(np.random.uniform(0, 1)):
-                    left_zero_key = None
-                else:
-                    right_zero_key = None
+            # Исключаем большое сито
+            if left_zero_key in big_sito:
+                left_zero_key = None
 
-            if left_zero_key or right_zero_key:
-                if keys_for_set_disbalance is None:
-                    keys_for_set_disbalance = keys[keys.index(left_zero_key) + 1:] if left_zero_key else keys[: keys.index(right_zero_key)]
+            # Для начала смотрим, можем ли мы что-то обнулить
+            keys_for_random_set_zero = []
+            if getattr(self, keys_for_set_disbalance[0]) < 3 and keys_for_set_disbalance[0] not in big_sito:
+                keys_for_random_set_zero.append(keys_for_set_disbalance[0])
+            if getattr(self, keys_for_set_disbalance[-1]) < 3:
+                keys_for_random_set_zero.append(keys_for_set_disbalance[-1])
 
-                limit = min(
-                    [
-                        balance,
-                        getattr(self, keys[keys.index(left_zero_key) + 1]) if left_zero_key else getattr(self, keys[
-                            keys.index(right_zero_key)]),
-                        0.5
-                    ]
-                )
+            algorithm = None
 
-                val = np.round(np.random.uniform(0, limit), 1)
-                setattr(self,
-                        left_zero_key if left_zero_key else right_zero_key,
-                        float('{:.1f}'.format(val)) if val else None)
-
-                balance = float('{:.1f}'.format(self._calculateGranBalance()))
-                key = np.random.choice(keys_for_set_disbalance)
-                setattr(self, key, float('{:.1f}'.format(np.round(getattr(self, key) + balance, 1))))
-
+            if not keys_for_random_set_zero and not left_zero_key and not right_zero_key:
+                pass
+            elif (right_zero_key or left_zero_key) and not keys_for_random_set_zero:
+                algorithm = "add"
+            elif keys_for_random_set_zero and not (right_zero_key or left_zero_key):
+                algorithm = "subtraction"
             else:
-                key = np.random.choice(keys)
-                setattr(self, key, float('{:.1f}'.format(np.round(getattr(self, key) + balance, 1))))
+                algorithm = np.random.choice(["add", "subtraction"])
+
+            if algorithm == "subtraction":
+                for key_for_random_set_zero in keys_for_random_set_zero:
+                    keys_for_set_disbalance.pop(keys_for_set_disbalance.index(key_for_random_set_zero))
+                    setattr(self, key_for_random_set_zero, None)
+
+            if algorithm == "add":
+                if left_zero_key:
+                    # Предел допустимого нового значения
+                    limit = min([balance / 2, getattr(self, keys[keys.index(left_zero_key) + 1]), 0.5])
+                    val = np.round(np.random.uniform(0, limit), 1)
+                    setattr(self, left_zero_key,
+                            float('{:.1f}'.format(val)) if val else None)
+
+                if right_zero_key:
+                    # Предел допустимого нового значения
+                    limit = min([balance / 2, getattr(self, keys[keys.index(right_zero_key) - 1]), 0.5])
+                    val = np.round(np.random.uniform(0, limit), 1)
+                    setattr(self, right_zero_key, float('{:.1f}'.format(val)) if val else None)
+
+            # Раскидывание остатков
+            balance = float('{:.1f}'.format(self._calculateGranBalance()))
+            key = np.random.choice(keys_for_set_disbalance)
+            setattr(self, key, float('{:.1f}'.format(np.round(getattr(self, key) + balance, 1))))
 
             balance = float('{:.1f}'.format(self._calculateGranBalance()))
 
