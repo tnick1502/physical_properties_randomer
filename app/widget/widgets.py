@@ -7,7 +7,6 @@ import os
 
 from app.model import statment
 from app.model.statment_model import RandomType
-from app.model.ground_type_identifier import GroundTypes, convert_type_to_name
 
 PARAMS_PATH = "Z:/Digitrock/randomerParams.json"
 
@@ -131,7 +130,7 @@ class TablePhysicalProperties(QTableWidget):
 
                 for g, value in enumerate([str(data[lab]["modified_data"][key]) for key in self.keys]):
                     if g == 0:
-                        value = convert_type_to_name(value)
+                        value = data[lab]["modified_data"]["ground_name"]
                     item = QTableWidgetItem(replaceNone(value))
                     item.setTextAlignment(Qt.AlignCenter)
                     self.setItem(2 * i + 1, g + 3, item)
@@ -262,7 +261,8 @@ class ChooseWidget(QWidget):
         self.combobox.clear()
         data = statment.getData()
         self.ground_types_dict = {
-            convert_type_to_name(key): key for key in [data[lab]["origin_data"]["type_ground"] for lab in data]}
+            data[lab]["origin_data"]["ground_name"]: data[lab]["origin_data"]["type_ground"] for lab in data
+        }
         self.combobox.addItems(["Не выбрано"] + list(self.ground_types_dict.keys()))
 
 class Params(QWidget):

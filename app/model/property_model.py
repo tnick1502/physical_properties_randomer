@@ -23,7 +23,7 @@ from decimal import Decimal
 from typing import Dict, Union
 
 from app.model.properties_params import PhysicalPropertyParams
-from app.model.ground_type_identifier import define_type_ground
+from app.model.ground_type_identifier import define_type_ground, GroundTypes_C, GroundTypes_B, GroundTypes, GroundTypes_D
 
 class RandomType(Enum):
     PERCENT = "PERCENT"
@@ -127,6 +127,7 @@ class PhysicalProperties:
     granulometric_0002_modified = DataTypeValidation(float)
     granulometric_0000_modified = DataTypeValidation(float)
     type_ground_modified = DataTypeValidation(str)
+    ground_name_modified = DataTypeValidation(str)
 
     def __init__(self):
         for key in PhysicalProperties.__dict__:
@@ -150,6 +151,7 @@ class PhysicalProperties:
         for key in PhysicalProperties.__dict__:
             if "modified" in key:
                 object.__setattr__(self, key, getattr(self, key[:-9]))
+        self.ground_name_modified = self._convert_type_to_name(False)
 
     def setRandom(self, random_params: Dict[str, Dict[str, Union[str, float]]]) -> bool:
         """Наложения рандома
@@ -229,6 +231,7 @@ class PhysicalProperties:
                         if "modified" in key:
                             object.__setattr__(self, key, getattr(self, key[:-9]))
                     return False
+        self.ground_name_modified = self._convert_type_to_name()
         return True
 
     def _randomParam(self, param_name: str, param_type: str, param_value: float) -> None:
@@ -427,6 +430,23 @@ class PhysicalProperties:
             "modified_data": {
                 attr_name[:-9]: self.__dict__[attr_name] for attr_name in self.__dict__ if "modified" in attr_name}
         }
+
+    def _convert_type_to_name(self, modified=True):
+        A, B, C, D = list(self.type_ground_modified) if modified else list(self.type_ground)
+
+        A = GroundTypes[A]
+        B = " " + GroundTypes_B.get(B, None) if GroundTypes_B.get(B, None) else ""
+        D = " " + GroundTypes_D.get(D, None) if GroundTypes_D.get(D, None) else ""
+
+        if A in ["A", "B", "C"]:
+            C = ", заполнитель: " + GroundTypes.get(C, None) if GroundTypes.get(C, None) else ""
+            if C:
+                percent = np.round(100 - self._granDictModified()["10"] - self._granDictModified()["5"] - self._granDictModified()["2"], 2)
+                C += f" {str(percent)} %"
+        else:
+            C = " " + GroundTypes_C.get(C, None) if GroundTypes_C.get(C, None) else ""
+
+        return A + B + C + D
 
     def __repr__(self):
         origin_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" not in attr_name and "headler" not in attr_name])

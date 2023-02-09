@@ -1,3 +1,5 @@
+
+
 def define_type_ground(data_gran: dict, Ir: float, Ip: float, e: float, Il: float) -> int:
     """Функция определения типа грунта через грансостав
 
@@ -242,51 +244,59 @@ def define_mixed(type: str, data_gran: dict, Ip: float) -> str:
     if type in ["I", "J", "R", "O", "P", "Q", "T"]:
         if 15 <= accumulate_gran(data_gran, ['10', '5', '2']) <= 25:
             if accumulate_gran(data_gran, ['5', '2']) > accumulate_gran(data_gran, ['10']):
-                return "B"
+                return "2"
             else:
-                return "A"
+                return "1"
         elif 25 < accumulate_gran(data_gran, ['10', '5', '2']) <= 50:
             if accumulate_gran(data_gran, ['5', '2']) > accumulate_gran(data_gran, ['10']):
-                return "F"
+                return "6"
             else:
-                return "E"
+                return "5"
 
     elif type in ["K", "L", "M", "N", "S"]:
         if 15 <= accumulate_gran(data_gran, ['10', '5', '2']) <= 25:
             if accumulate_gran(data_gran, ['5', '2']) > accumulate_gran(data_gran, ['10']):
-                return "B"
+                return "2"
             else:
-                return "A"
+                return "1"
         elif 25 < accumulate_gran(data_gran, ['10', '5', '2']) <= 50:
             if accumulate_gran(data_gran, ['5', '2']) > accumulate_gran(data_gran, ['10']):
-                return "D"
+                return "4"
             else:
-                return "C"
+                return "3"
 
     if type in ["A", "B", "C"]:
-        if accumulate_gran(data_gran, ['1', '05', '025', '01', "005", "001", "0002", "0000"]) >= 30:
-            if 1 <= Ip <= 7:
-                return "H"  # с супесью
-            elif 7 < Ip <= 17:
-                return "I"  # с суглинком
-            elif Ip > 17:
-                return "J"  # с глиной
-        elif accumulate_gran(data_gran, ['1', '05', '025', '01']) >= 40:
-            return "G"  # с песком
+        mix = define_main_type(recalculate_gran_without_big(data_gran), Ir=0, Ip=Ip)
+
+        if mix in ["I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"]:
+            if accumulate_gran(data_gran, ['1', '05', '025', '01', "005", "001", "0002", "0000"]) >= 30:
+                return mix
+        elif mix in ["D", "E", "F", "G", "H"]:
+            if accumulate_gran(data_gran, ['1', '05', '025', '01']) >= 40:
+                return mix
 
     return "-"
 
+def recalculate_gran_without_big(data_gran: dict):
+    """Функция пересчета грансостава при вычете крупнообломовочного грунта
 
-    raise ValueError("Can't define organic ground type")
+        :argument data_gran: словарь грансостава, полуенный из granDict или granDictModified
+        :return data_gran
+    """
+    big_keys = ['10', '5', '2']
+    gran = dict(data_gran)
 
-def convert_type_to_name(type_ground: str):
-    A, B, C, D = list(type_ground)
-    A = GroundTypes[A]
-    B = " " + GroundTypes_B.get(B, None) if GroundTypes_B.get(B, None) else ""
-    C = " " + GroundTypes_C.get(C, None) if GroundTypes_C.get(C, None) else ""
-    D = " " + GroundTypes_D.get(D, None) if GroundTypes_D.get(D, None) else ""
+    big_gran = sum([gran[i] for i in big_keys if gran[i]])
 
-    return A + B + C + D
+    for key in big_keys:
+        gran[key] = 0
+
+    for key in gran:
+        if gran[key]:
+            gran[key] = (gran[key] / (100 - big_gran)) * 100
+
+    return gran
+
 
 GroundTypes = {
     "A": "Грунт щебенистый",
@@ -335,16 +345,12 @@ GroundTypes_B = {
 }
 
 GroundTypes_C = {
-    "A": "с щебнем",
-    "B": "с дресвой",
-    "C": "щебенистый",
-    "D": "дресвяный",
-    "E": "щебенистая",
-    "F": "дресвяная",
-    "G": "с песком",
-    "H": "с супесью",
-    "I": "с суглинком",
-    "J": "с глиной",
+    "1": "с щебнем",
+    "2": "с дресвой",
+    "3": "щебенистый",
+    "4": "дресвяный",
+    "5": "щебенистая",
+    "6": "дресвяная",
 }
 
 GroundTypes_D = {
@@ -353,8 +359,6 @@ GroundTypes_D = {
     "C": "со средним содержанием органического вещества",
     "D": "с высоким содержанием органического вещества",
 }
-
-
 
 
 
