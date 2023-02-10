@@ -27,12 +27,15 @@ def define_type_ground(data_gran: dict, Ir: float, Ip: float, e: float, Il: floa
     else:
         type_ground_С = "-"
 
+    if type_ground_С != "-" and type_ground_С not in GroundTypes_C.keys():
+        type_ground_С = define_type_ground(recalculate_gran_without_big(data_gran), Ir, Ip, e, Il)
+
     if type_ground_A in ["D", "E", "F", "G", "H", "I", "J", "R", "K", "L", "M", "N", "S", "O", "P", "Q", "T"]:
         type_ground_D = define_organic(type_ground_A, Ir)
     else:
         type_ground_D = "-"
 
-    return type_ground_A + type_ground_B + type_ground_С + type_ground_D
+    return [type_ground_A, type_ground_B, type_ground_С, type_ground_D]
 
 def none_to_zero(x):
     return x if x else 0
@@ -265,14 +268,13 @@ def define_mixed(type: str, data_gran: dict, Ip: float) -> str:
             else:
                 return "3"
 
-    if type in ["A", "B", "C"]:
+    elif type in ["A", "B", "C"]:
         mix = define_main_type(recalculate_gran_without_big(data_gran), Ir=0, Ip=Ip)
-
         if mix in ["I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"]:
             if accumulate_gran(data_gran, ['1', '05', '025', '01', "005", "001", "0002", "0000"]) >= 30:
                 return mix
         elif mix in ["D", "E", "F", "G", "H"]:
-            if accumulate_gran(data_gran, ['1', '05', '025', '01']) >= 40:
+            if accumulate_gran(data_gran, ['1', '05', '025', '01', "005", "001", "0002", "0000"]) >= 40:
                 return mix
 
     return "-"
@@ -299,28 +301,28 @@ def recalculate_gran_without_big(data_gran: dict):
 
 
 GroundTypes = {
-    "A": "Грунт щебенистый",
-    "B": "Грунт дресвяный",
-    "C": "Грунт дресвяно-щебенистый",
-    "D": "Песок гравелистый",
-    "E": "Песок крупный",
-    "F": "Песок средней крупности",
-    "G": "Песок мелкий",
-    "H": "Песок пылеватый",
-    "I": "Супесь песчанистая",
-    "J": "Супесь пылеватая",
-    "K": "Суглинок легкий песчанистый",
-    "L": "Суглинок тяжелый песчанистый",
-    "M": "Суглинок легкий пылеватый",
-    "N": "Суглинок тяжелый пылеватый",
-    "O": "Глина легкая песчанистая",
-    "P": "Глина легкая пылеватая",
-    "Q": "Глина тяжелая",
-    "R": "Супесь",
-    "S": "Суглинок",
-    "T": "Глина",
-    "U": "Торф",
-    "Z": "Не определяется"
+    "A": "грунт щебенистый",
+    "B": "грунт дресвяный",
+    "C": "грунт дресвяно-щебенистый",
+    "D": "песок гравелистый",
+    "E": "песок крупный",
+    "F": "песок средней крупности",
+    "G": "песок мелкий",
+    "H": "песок пылеватый",
+    "I": "супесь песчанистая",
+    "J": "супесь пылеватая",
+    "K": "суглинок легкий песчанистый",
+    "L": "суглинок тяжелый песчанистый",
+    "M": "суглинок легкий пылеватый",
+    "N": "суглинок тяжелый пылеватый",
+    "O": "глина легкая песчанистая",
+    "P": "глина легкая пылеватая",
+    "Q": "глина тяжелая",
+    "R": "супесь",
+    "S": "суглинок",
+    "T": "глина",
+    "U": "торф",
+    "Z": "не определяется"
 }
 
 GroundTypes_B = {

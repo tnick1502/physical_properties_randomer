@@ -94,7 +94,7 @@ class PhysicalProperties:
     granulometric_0002 = DataTypeValidation(float)
     granulometric_0000 = DataTypeValidation(float)
     sample_number = DataTypeValidation(int)
-    type_ground = DataTypeValidation(str)
+    type_ground = DataTypeValidation(list)
     ground_name = DataTypeValidation(str)
 
     rs_modified = DataTypeValidation(float)
@@ -126,7 +126,7 @@ class PhysicalProperties:
     granulometric_001_modified = DataTypeValidation(float)
     granulometric_0002_modified = DataTypeValidation(float)
     granulometric_0000_modified = DataTypeValidation(float)
-    type_ground_modified = DataTypeValidation(str)
+    type_ground_modified = DataTypeValidation(list)
     ground_name_modified = DataTypeValidation(str)
 
     def __init__(self):
@@ -432,21 +432,27 @@ class PhysicalProperties:
         }
 
     def _convert_type_to_name(self, modified=True):
-        A, B, C, D = list(self.type_ground_modified) if modified else list(self.type_ground)
+        A, B, C, D = self.type_ground_modified if modified else self.type_ground
 
-        A = GroundTypes[A]
         B = " " + GroundTypes_B.get(B, None) if GroundTypes_B.get(B, None) else ""
         D = " " + GroundTypes_D.get(D, None) if GroundTypes_D.get(D, None) else ""
 
-        if A in ["A", "B", "C"]:
-            C = ", заполнитель: " + GroundTypes.get(C, None) if GroundTypes.get(C, None) else ""
+        if A in ["A", "B", "C"] and C != "-":
+            A_mixed, B_mixed, _, D_mixed = C
+            A_mixed = GroundTypes.get(A_mixed, None)
+            B_mixed = " " + GroundTypes_B.get(B_mixed, None) if GroundTypes_B.get(B_mixed, None) else ""
+
+            C = ", заполнитель: " + A_mixed + B_mixed if A_mixed else ""
+
             if C:
                 percent = np.round(100 - self._granDictModified()["10"] - self._granDictModified()["5"] - self._granDictModified()["2"], 2)
                 C += f" {str(percent)} %"
         else:
             C = " " + GroundTypes_C.get(C, None) if GroundTypes_C.get(C, None) else ""
 
-        return A + B + C + D
+        A = GroundTypes[A]
+
+        return (A + B + C + D).capitalize()
 
     def __repr__(self):
         origin_data = ', '.join([f'{attr_name}: {self.__dict__[attr_name]}' for attr_name in self.__dict__ if "modified" not in attr_name and "headler" not in attr_name])
