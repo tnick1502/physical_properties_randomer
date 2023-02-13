@@ -2,6 +2,7 @@ import pandas as pd
 import xlrd
 from xlutils.copy import copy
 import os
+from queue import Queue
 
 from app.model.property_model import PhysicalProperties, RandomType
 from app.model.properties_params import PhysicalPropertyParams
@@ -80,6 +81,7 @@ class Statment:
     data: dict = {}
     excel_path: str = ''
     dataframe: pd.DataFrame
+    queue = Queue()
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
@@ -106,19 +108,18 @@ class Statment:
             self.data[laboratory_number] = PhysicalProperties()
             self.data[laboratory_number].defineProperties(data_frame=self.dataframe, number=i)
 
-    def setRandom(self, params: random_params, keys: list) -> list:
+    def setRandom(self, params: random_params, problem_keys) -> list:
         """Открытие файла excel
 
             :argument params: словарь параметров рандома
             :argument keys: лабномера для ативации на их моделях функции рандома
             :return лабномера, на которых не получилось применить функцию рандома
         """
-        problem_keys = []
-        for key in keys:
+        while not self.queue.empty():
+            key = self.queue.get()
             res = self.data[key].setRandom(params)
             if not res:
                 problem_keys.append(key)
-        return problem_keys
 
     def getData(self) -> dict:
         """Получение всех параметров

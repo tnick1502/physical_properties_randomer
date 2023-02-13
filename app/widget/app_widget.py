@@ -1,6 +1,8 @@
 __version__ = '1.0.0'
 
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QMessageBox, QProgressDialog
+from PyQt5.QtCore import Qt
+import threading
 
 from widgets import TablePhysicalProperties, OpenWidget, Params, ChooseWidget, Info
 
@@ -97,8 +99,29 @@ class App(QMainWindow):
     def set_random(self, params):
         try:
             active = self.table.active_laboratory_numbers
-            problem_keys = statment.setRandom(params, active)
+            for key in active:
+                statment.queue.put(key)
+
+            progress = QProgressDialog("Наложение девиаций...", "Процесс:", 0, statment.queue.qsize(), self)
+            progress.setCancelButton(None)
+            progress.setWindowFlags(progress.windowFlags() & ~Qt.WindowCloseButtonHint)
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setValue(0)
+            progress.show()
+
+            problem_keys = []
+            progress_work = threading.Thread(target=statment.setRandom, args=(params, problem_keys,))
+            progress_work.start()
+
+            max = statment.queue.qsize()
+            while not statment.queue.empty():
+                progress.setValue(max - statment.queue.qsize())
+            progress.close()
+
+            progress_work.join()
+
             self.table.set_data(active_keys=active, problem_keys=problem_keys)
+
         except Exception as err:
             QMessageBox.critical(self, "Ошибка", f"{str(err)}", QMessageBox.Ok)
 
