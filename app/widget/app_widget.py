@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPus
 from PyQt5.QtCore import Qt
 import threading
 
-from widgets import TablePhysicalProperties, OpenWidget, Params, ChooseWidget, Info
+from .widgets import TablePhysicalProperties, OpenWidget, Params, ChooseWidget, Info
 
 from app.model import statment
 
