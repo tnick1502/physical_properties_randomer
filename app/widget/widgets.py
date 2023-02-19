@@ -243,7 +243,7 @@ class ChooseWidget(QWidget):
         self.layout.setContentsMargins(5, 5, 5, 5)
 
         self.zero_button.clicked.connect(lambda: self.signal.emit([]))
-        self.all_button.clicked.connect(lambda: self.signal.emit([key for key in list(statment.data.keys()) if statment[key].type_ground != "Z---"]))
+        self.all_button.clicked.connect(lambda: self.signal.emit([key for key in list(statment.data.keys()) if statment[key].type_ground != ['Z', '-', '-', '-']]))
         self.combobox.activated.connect(self._combo_changed)
 
     def _combo_changed(self, value):
@@ -261,8 +261,10 @@ class ChooseWidget(QWidget):
         self.combobox.clear()
         data = statment.getData()
         self.ground_types_dict = {
-            data[lab]["origin_data"]["ground_name"]: data[lab]["origin_data"]["type_ground"] for lab in data
-        }
+            data[lab]["modified_data"]["ground_name"]: data[lab]["modified_data"]["type_ground"] for lab in data
+            if statment[lab].type_ground != ['Z', '-', '-', '-']}
+        self.signal.emit(
+            [key for key in list(statment.data.keys()) if statment[key].type_ground != ['Z', '-', '-', '-']])
         self.combobox.addItems(["Не выбрано"] + list(self.ground_types_dict.keys()))
 
 class Params(QWidget):
